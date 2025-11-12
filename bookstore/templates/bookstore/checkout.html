@@ -90,40 +90,64 @@
             gap: 0.5rem;
         }
 
-        .delivery-info {
-            background: #f9fafb;
-            padding: 1.5rem;
-            border-radius: 15px;
-            margin-bottom: 2rem;
-            border-left: 4px solid #667eea;
-        }
-
-        .delivery-info h4 {
-            color: #1f2937;
-            font-size: 1.1rem;
-            margin-bottom: 1rem;
-        }
-
-        .info-row {
-            display: flex;
-            padding: 0.5rem 0;
-            color: #4b5563;
-        }
-
-        .info-label {
-            font-weight: 600;
-            min-width: 100px;
-            color: #6b7280;
-        }
-
-        .info-value {
-            color: #1f2937;
-        }
-
-        .payment-section h3 {
-            font-size: 1.3rem;
-            color: #1f2937;
+        .form-group {
             margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 0.5rem;
+            font-size: 0.95rem;
+        }
+
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            width: 100%;
+            padding: 0.9rem 1.2rem;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-family: inherit;
+            transition: all 0.3s;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 0.7rem;
+            margin-bottom: 1.5rem;
+            padding: 1rem;
+            background: #f9fafb;
+            border-radius: 12px;
+        }
+
+        .checkbox-group input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+        }
+
+        .checkbox-group label {
+            font-weight: 500;
+            color: #374151;
+            cursor: pointer;
+            margin: 0;
         }
 
         .payment-methods {
@@ -420,32 +444,41 @@
 
         <div class="checkout-wrapper">
             <div class="checkout-section">
-                <h3 class="section-title">📍 Delivery Information</h3>
-                
-                <div class="delivery-info">
-                    <h4>Delivering to:</h4>
-                    <div class="info-row">
-                        <span class="info-label">Name:</span>
-                        <span class="info-value">{{ user.get_full_name|default:user.username }}</span>
-                    </div>
-                    <div class="info-row">
-                        <span class="info-label">Email:</span>
-                        <span class="info-value">{{ user.email }}</span>
-                    </div>
-                    <div class="info-row">
-                        <span class="info-label">Phone:</span>
-                        <span class="info-value">{{ user.customer.phone }}</span>
-                    </div>
-                    <div class="info-row">
-                        <span class="info-label">Address:</span>
-                        <span class="info-value">{{ user.customer.address }}</span>
-                    </div>
-                </div>
-
-                <h3 class="section-title">💰 Payment Method</h3>
-                
                 <form method="POST" id="checkoutForm">
                     {% csrf_token %}
+                    
+                    <h3 class="section-title">📍 Delivery Information</h3>
+                    
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="sameAsProfile" checked>
+                        <label for="sameAsProfile">Use my profile information</label>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="delivery_name">Recipient Name *</label>
+                        <input type="text" id="delivery_name" name="delivery_name" 
+                               value="{{ user.get_full_name|default:user.username }}" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="delivery_phone">Phone Number *</label>
+                        <input type="text" id="delivery_phone" name="delivery_phone" 
+                               value="{{ customer.phone }}" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="delivery_address">Delivery Address *</label>
+                        <textarea id="delivery_address" name="delivery_address" 
+                                  rows="3" required>{{ customer.address }}</textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="delivery_notes">Delivery Notes (Optional)</label>
+                        <textarea id="delivery_notes" name="delivery_notes" 
+                                  rows="2" placeholder="Any special instructions for delivery..."></textarea>
+                    </div>
+
+                    <h3 class="section-title" style="margin-top: 2rem;">💰 Payment Method</h3>
                     
                     <div class="payment-methods">
                         <div class="payment-option">
@@ -526,12 +559,12 @@
                 
                 <div class="summary-row">
                     <span>Shipping Fee</span>
-                    <span class="amount">Rs. 150</span>
+                    <span class="amount">Rs. 0.00</span>
                 </div>
                 
                 <div class="summary-row total">
                     <span>Total Amount</span>
-                    <span class="amount">Rs. {{ cart.total_amount|add:150 }}</span>
+                    <span class="amount">Rs. {{ cart.total_amount }}</span>
                 </div>
 
                 <div class="secure-badge">
@@ -544,6 +577,22 @@
     <footer>
         <p>© 2025 Shelfly Online Bookstore. All rights reserved.</p>
     </footer>
+
+    <script>
+        // Toggle between profile address and custom address
+        document.getElementById('sameAsProfile').addEventListener('change', function() {
+            if (this.checked) {
+                document.getElementById('delivery_name').value = "{{ user.get_full_name|default:user.username }}";
+                document.getElementById('delivery_phone').value = "{{ customer.phone }}";
+                document.getElementById('delivery_address').value = "{{ customer.address }}";
+            } else {
+                document.getElementById('delivery_name').value = "";
+                document.getElementById('delivery_phone').value = "";
+                document.getElementById('delivery_address').value = "";
+                document.getElementById('delivery_name').focus();
+            }
+        });
+    </script>
 
 </body>
 </html>

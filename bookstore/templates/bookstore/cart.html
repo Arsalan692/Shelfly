@@ -472,12 +472,12 @@
                 
                 <div class="summary-row">
                     <span>Shipping</span>
-                    <span class="amount">Rs. 150</span>
+                    <span class="amount">Rs. 0.00</span>
                 </div>
                 
                 <div class="summary-row total">
                     <span>Total</span>
-                    <span class="amount">Rs. {{ cart.total_amount|add:150 }}</span>
+                    <span class="amount">Rs. {{ cart.total_amount }}</span>
                 </div>
                 
                 <a href="{% url 'checkout' %}" class="btn checkout-btn">

@@ -66,7 +66,7 @@
         }
 
         .container {
-            max-width: 1000px;
+            max-width: 1100px;
             margin: 0 auto 5rem auto;
             padding: 0 2rem;
         }
@@ -163,6 +163,45 @@
             background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
             color: #991b1b;
             box-shadow: 0 3px 10px rgba(239, 68, 68, 0.3);
+        }
+
+        .order-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .delivery-info {
+            background: linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%);
+            padding: 1.5rem;
+            border-radius: 15px;
+            border-left: 4px solid #667eea;
+        }
+
+        .delivery-info h4 {
+            color: #1f2937;
+            margin-bottom: 1rem;
+            font-size: 1.1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .info-row {
+            display: flex;
+            margin-bottom: 0.7rem;
+            color: #4b5563;
+        }
+
+        .info-label {
+            font-weight: 600;
+            min-width: 90px;
+            color: #6b7280;
+        }
+
+        .info-value {
+            color: #1f2937;
         }
 
         .order-items {
@@ -313,6 +352,10 @@
                 gap: 1rem;
             }
 
+            .order-content {
+                grid-template-columns: 1fr;
+            }
+
             li {
                 flex-direction: column;
                 align-items: flex-start;
@@ -348,24 +391,48 @@
                     <div class="order-header">
                         <div class="order-number">
                             <strong>Order #{{ order.id }}</strong>
-                            <span class="order-date">📅 {{ order.order_date|date:"M d, Y" }}</span>
+                            <span class="order-date">📅 {{ order.order_date|date:"M d, Y - h:i A" }}</span>
                         </div>
                         <span class="status {{ order.status }}">{{ order.status }}</span>
                     </div>
 
-                    <div class="order-items">
-                        <h4>📚 Items Ordered:</h4>
-                        <ul>
-                            {% for item in order.orderitem_set.all %}
-                                <li>
-                                    <div class="item-details">
-                                        <span class="item-name">{{ item.book.title }}</span>
-                                        <span class="item-quantity">× {{ item.quantity }}</span>
-                                    </div>
-                                    <span class="item-price">Rs. {{ item.subtotal }}</span>
-                                </li>
-                            {% endfor %}
-                        </ul>
+                    <div class="order-content">
+                        <div class="delivery-info">
+                            <h4>📍 Delivery Information</h4>
+                            <div class="info-row">
+                                <span class="info-label">Name:</span>
+                                <span class="info-value">{{ order.delivery_name }}</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">Phone:</span>
+                                <span class="info-value">{{ order.delivery_phone }}</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">Address:</span>
+                                <span class="info-value">{{ order.delivery_address }}</span>
+                            </div>
+                            {% if order.delivery_notes %}
+                            <div class="info-row">
+                                <span class="info-label">Notes:</span>
+                                <span class="info-value">{{ order.delivery_notes }}</span>
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="order-items">
+                            <h4>📚 Items Ordered</h4>
+                            <ul>
+                                {% for item in order.orderitem_set.all %}
+                                    <li>
+                                        <div class="item-details">
+                                            <span class="item-name">{{ item.book.title }}</span>
+                                            <span class="item-quantity">× {{ item.quantity }}</span>
+                                        </div>
+                                        <span class="item-price">Rs. {{ item.subtotal }}</span>
+                                    </li>
+                                {% endfor %}
+                            </ul>
+                        </div>
                     </div>
 
                     <div class="order-footer">

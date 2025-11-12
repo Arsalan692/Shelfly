@@ -39,6 +39,12 @@ class Order(models.Model):
     customer = models.ForeignKey(Customer, on_delete=models.CASCADE)
     order_date = models.DateTimeField(auto_now_add=True)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='Pending')
+    
+    # Delivery Information
+    delivery_name = models.CharField(max_length=100, default='N/A')
+    delivery_phone = models.CharField(max_length=15, default='N/A')
+    delivery_address = models.TextField(default='N/A')
+    delivery_notes = models.TextField(blank=True, null=True)  # Optional special instructions
 
     def __str__(self):
         return f"Order #{self.id} - {self.customer.user.username}"

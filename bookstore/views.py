@@ -201,8 +201,20 @@ def checkout(request):
     if request.method == 'POST':
         payment_method = request.POST.get('payment_method', 'Cash')
         
-        # Create Order
-        order = Order.objects.create(customer=customer)
+        # Get delivery information from form
+        delivery_name = request.POST.get('delivery_name')
+        delivery_phone = request.POST.get('delivery_phone')
+        delivery_address = request.POST.get('delivery_address')
+        delivery_notes = request.POST.get('delivery_notes', '')
+        
+        # Create Order with delivery info
+        order = Order.objects.create(
+            customer=customer,
+            delivery_name=delivery_name,
+            delivery_phone=delivery_phone,
+            delivery_address=delivery_address,
+            delivery_notes=delivery_notes
+        )
         
         # Create Order Items from Cart Items
         for cart_item in cart_items:
@@ -231,5 +243,31 @@ def checkout(request):
     context = {
         'cart': cart,
         'cart_items': cart_items,
+        'customer': customer,  # Pass customer for pre-filling form
     }
     return render(request, 'bookstore/checkout.html', context)
+
+
+@login_required(login_url='login')
+def edit_profile(request):
+    customer = request.user.customer
+    
+    if request.method == 'POST':
+        # Get form data
+        email = request.POST.get('email')
+        phone = request.POST.get('phone')
+        address = request.POST.get('address')
+        
+        # Update User email
+        request.user.email = email
+        request.user.save()
+        
+        # Update Customer details
+        customer.phone = phone
+        customer.address = address
+        customer.save()
+        
+        messages.success(request, 'Profile updated successfully!')
+        return redirect('edit_profile')
+    
+    return render(request, 'bookstore/edit_profile.html', {'customer': customer})
