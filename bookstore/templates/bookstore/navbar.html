@@ -1,0 +1,73 @@
+<style>
+    .navbar {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        padding: 15px 30px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    }
+    
+    .navbar-brand {
+        color: white;
+        font-size: 24px;
+        font-weight: bold;
+        text-decoration: none;
+    }
+    
+    .navbar-menu {
+        display: flex;
+        gap: 20px;
+        align-items: center;
+    }
+    
+    .navbar-menu a {
+        color: white;
+        text-decoration: none;
+        padding: 8px 16px;
+        border-radius: 5px;
+        transition: background 0.3s;
+    }
+    
+    .navbar-menu a:hover {
+        background: rgba(255, 255, 255, 0.2);
+    }
+    
+    .navbar-user {
+        color: white;
+        font-weight: 500;
+    }
+    
+    .btn-logout {
+        background: rgba(255, 255, 255, 0.2);
+        border: 1px solid white;
+        padding: 8px 20px;
+        border-radius: 5px;
+        cursor: pointer;
+        transition: background 0.3s;
+    }
+    
+    .btn-logout:hover {
+        background: rgba(255, 255, 255, 0.3);
+    }
+</style>
+
+<nav class="navbar">
+    <a href="{% url 'home' %}" class="navbar-brand">📚 Shelfly</a>
+    
+    <div class="navbar-menu">
+        <a href="{% url 'home' %}">Home</a>
+        <a href="{% url 'book_list' %}">Books</a>
+        <a href="{% url 'about' %}">About</a>
+        <a href="{% url 'contact' %}">Contact</a>
+        
+        {% if user.is_authenticated %}
+            <a href="{% url 'order_history' %}">My Orders</a>
+            <span class="navbar-user">👤 {{ user.username }}</span>
+            <a href="{% url 'logout' %}" class="btn-logout">Logout</a>
+        {% else %}
+            <a href="{% url 'login' %}">Login</a>
+            <a href="{% url 'register' %}">Register</a>
+        {% endif %}
+    </div>
+</nav>
