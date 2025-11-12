@@ -102,6 +102,43 @@ class Payment(models.Model):
     def __str__(self):
         return f"Payment for Order #{self.order.id} - {self.status}"
 
+class Cart(models.Model):
+    customer = models.OneToOneField(Customer, on_delete=models.CASCADE)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"Cart - {self.customer.user.username}"
+    
+    @property
+    def total_amount(self):
+        """Calculate total cart value"""
+        return sum(item.subtotal for item in self.cartitem_set.all())
+    
+    @property
+    def total_items(self):
+        """Count total items in cart"""
+        return sum(item.quantity for item in self.cartitem_set.all())
+
+
+class CartItem(models.Model):
+    cart = models.ForeignKey(Cart, on_delete=models.CASCADE)
+    book = models.ForeignKey(Book, on_delete=models.CASCADE)
+    quantity = models.PositiveIntegerField(default=1)
+    added_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('cart', 'book')  # Prevent duplicate books in same cart
+
+    def __str__(self):
+        return f"{self.book.title} x {self.quantity}"
+    
+    @property
+    def subtotal(self):
+        """Calculate subtotal for this item"""
+        return self.book.price * self.quantity
+
+
 
 @receiver(post_save, sender=Payment)
 def update_order_status(sender, instance, created, **kwargs):

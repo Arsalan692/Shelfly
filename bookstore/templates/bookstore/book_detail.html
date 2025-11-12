@@ -17,56 +17,6 @@
             color: #333;
         }
 
-        header {
-            background-color: #1f2937;
-            color: white;
-            padding: 1.2rem 3rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-            position: sticky;
-            top: 0;
-            z-index: 1000;
-        }
-
-        header h1 {
-            font-size: 1.8rem;
-            letter-spacing: 1px;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        nav a {
-            color: white;
-            text-decoration: none;
-            margin-left: 2rem;
-            font-weight: 500;
-            transition: color 0.3s;
-            position: relative;
-        }
-
-        nav a::after {
-            content: '';
-            position: absolute;
-            width: 0;
-            height: 2px;
-            bottom: -5px;
-            left: 0;
-            background-color: #22d3ee;
-            transition: width 0.3s;
-        }
-
-        nav a:hover::after {
-            width: 100%;
-        }
-
-        nav a:hover {
-            color: #22d3ee;
-        }
-
-        /* === Main Container === */
         .container {
             max-width: 1000px;
             margin: 3rem auto 5rem auto;
@@ -89,7 +39,6 @@
             }
         }
 
-        /* === Book Header with Gradient === */
         .book-header {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
@@ -137,7 +86,6 @@
             z-index: 2;
         }
 
-        /* === Book Info Section === */
         .book-info {
             padding: 3rem;
         }
@@ -175,7 +123,6 @@
             font-size: 1.1rem;
         }
 
-        /* === Price Box === */
         .price-box {
             font-size: 2.2rem;
             color: #059669;
@@ -188,7 +135,6 @@
             box-shadow: 0 5px 20px rgba(5, 150, 105, 0.2);
         }
 
-        /* === Description === */
         .description {
             background: linear-gradient(135deg, #ede9fe 0%, #ddd6fe 100%);
             padding: 2rem;
@@ -214,7 +160,6 @@
             font-size: 1.05rem;
         }
 
-        /* === Stock Status === */
         .stock-status {
             display: inline-block;
             padding: 0.6rem 1.2rem;
@@ -258,7 +203,6 @@
             box-shadow: 0 4px 15px rgba(220, 38, 38, 0.2);
         }
 
-        /* === Buttons === */
         .btn-container {
             display: flex;
             gap: 1rem;
@@ -278,13 +222,13 @@
             cursor: pointer;
         }
 
-        .btn-buy {
+        .btn-cart {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
             box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
         }
 
-        .btn-buy:hover {
+        .btn-cart:hover {
             transform: translateY(-5px);
             box-shadow: 0 10px 30px rgba(102, 126, 234, 0.5);
         }
@@ -301,7 +245,6 @@
             box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
         }
 
-        /* === Footer === */
         footer {
             background-color: #1f2937;
             color: #9ca3af;
@@ -319,7 +262,6 @@
             text-decoration: underline;
         }
 
-        /* === Responsive === */
         @media (max-width: 768px) {
             .book-header h2 {
                 font-size: 2rem;
@@ -348,28 +290,12 @@
             .btn {
                 width: 100%;
             }
-
-            header {
-                padding: 1rem 1.5rem;
-            }
-
-            nav a {
-                margin-left: 1rem;
-            }
         }
     </style>
 </head>
 <body>
 
-    <header>
-        <h1>📚 Shelfly</h1>
-        <nav>
-            <a href="{% url 'home' %}">Home</a>
-            <a href="{% url 'book_list' %}">Books</a>
-            <a href="{% url 'about' %}">About</a>
-            <a href="{% url 'contact' %}">Contact</a>
-        </nav>
-    </header>
+    {% include 'bookstore/navbar.html' %}
 
     <main class="container">
         <div class="book-header">
@@ -426,10 +352,7 @@
 
             <div class="btn-container">
                 {% if book.stock > 0 %}
-                    <form action="{% url 'place_order' book.id %}" method="post" style="display:inline;">
-                        {% csrf_token %}
-                        <button type="submit" class="btn btn-buy">🛒 Buy Now</button>
-                    </form>
+                    <a href="{% url 'add_to_cart' book.id %}" class="btn btn-cart">🛒 Add to Cart</a>
                 {% endif %}
 
                 <a href="{% url 'book_list' %}" class="btn btn-back">← Back to Books</a>

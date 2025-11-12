@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Checkout | Shelfly</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: "Poppins", sans-serif;
+            background-color: #f8f9fc;
+            color: #333;
+        }
+
+        .page-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            text-align: center;
+            padding: 4rem 2rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .page-header::before {
+            content: '';
+            position: absolute;
+            width: 400px;
+            height: 400px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            top: -150px;
+            left: -150px;
+            animation: float 6s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-20px); }
+        }
+
+        .page-header h2 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+            position: relative;
+            z-index: 2;
+        }
+
+        .page-header p {
+            font-size: 1.1rem;
+            opacity: 0.95;
+            position: relative;
+            z-index: 2;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: -3rem auto 0 auto;
+            padding: 0 2rem 4rem 2rem;
+            position: relative;
+            z-index: 10;
+        }
+
+        .checkout-wrapper {
+            display: grid;
+            grid-template-columns: 1fr 400px;
+            gap: 2rem;
+        }
+
+        .checkout-section {
+            background: white;
+            border-radius: 20px;
+            padding: 2.5rem;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #1f2937;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid #e5e7eb;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .delivery-info {
+            background: #f9fafb;
+            padding: 1.5rem;
+            border-radius: 15px;
+            margin-bottom: 2rem;
+            border-left: 4px solid #667eea;
+        }
+
+        .delivery-info h4 {
+            color: #1f2937;
+            font-size: 1.1rem;
+            margin-bottom: 1rem;
+        }
+
+        .info-row {
+            display: flex;
+            padding: 0.5rem 0;
+            color: #4b5563;
+        }
+
+        .info-label {
+            font-weight: 600;
+            min-width: 100px;
+            color: #6b7280;
+        }
+
+        .info-value {
+            color: #1f2937;
+        }
+
+        .payment-section h3 {
+            font-size: 1.3rem;
+            color: #1f2937;
+            margin-bottom: 1.5rem;
+        }
+
+        .payment-methods {
+            display: grid;
+            gap: 1rem;
+        }
+
+        .payment-option {
+            position: relative;
+        }
+
+        .payment-option input[type="radio"] {
+            position: absolute;
+            opacity: 0;
+        }
+
+        .payment-label {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1.2rem 1.5rem;
+            border: 2px solid #e5e7eb;
+            border-radius: 15px;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: white;
+        }
+
+        .payment-option input[type="radio"]:checked + .payment-label {
+            border-color: #667eea;
+            background: #f0f4ff;
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.2);
+        }
+
+        .payment-label:hover {
+            border-color: #667eea;
+            transform: translateY(-2px);
+        }
+
+        .payment-icon {
+            font-size: 2rem;
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 12px;
+            color: white;
+        }
+
+        .payment-option input[type="radio"]:checked + .payment-label .payment-icon {
+            transform: scale(1.1);
+        }
+
+        .payment-details {
+            flex: 1;
+        }
+
+        .payment-name {
+            font-weight: 600;
+            color: #1f2937;
+            font-size: 1.1rem;
+            margin-bottom: 0.3rem;
+        }
+
+        .payment-desc {
+            color: #6b7280;
+            font-size: 0.9rem;
+        }
+
+        .radio-indicator {
+            width: 24px;
+            height: 24px;
+            border: 2px solid #d1d5db;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-left: auto;
+        }
+
+        .payment-option input[type="radio"]:checked + .payment-label .radio-indicator {
+            border-color: #667eea;
+        }
+
+        .radio-indicator::after {
+            content: '';
+            width: 12px;
+            height: 12px;
+            background: #667eea;
+            border-radius: 50%;
+            opacity: 0;
+            transform: scale(0);
+            transition: all 0.3s;
+        }
+
+        .payment-option input[type="radio"]:checked + .payment-label .radio-indicator::after {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        .order-summary {
+            background: white;
+            border-radius: 20px;
+            padding: 2.5rem;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+            height: fit-content;
+            position: sticky;
+            top: 2rem;
+        }
+
+        .summary-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #1f2937;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid #e5e7eb;
+        }
+
+        .order-items {
+            max-height: 300px;
+            overflow-y: auto;
+            margin-bottom: 1.5rem;
+            padding-right: 0.5rem;
+        }
+
+        .order-items::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .order-items::-webkit-scrollbar-track {
+            background: #f3f4f6;
+            border-radius: 10px;
+        }
+
+        .order-items::-webkit-scrollbar-thumb {
+            background: #667eea;
+            border-radius: 10px;
+        }
+
+        .order-item {
+            display: flex;
+            gap: 1rem;
+            padding: 1rem 0;
+            border-bottom: 1px solid #f3f4f6;
+        }
+
+        .order-item:last-child {
+            border-bottom: none;
+        }
+
+        .item-icon {
+            font-size: 2rem;
+        }
+
+        .item-info {
+            flex: 1;
+        }
+
+        .item-name {
+            font-weight: 600;
+            color: #1f2937;
+            font-size: 0.95rem;
+            margin-bottom: 0.3rem;
+        }
+
+        .item-qty-price {
+            color: #6b7280;
+            font-size: 0.85rem;
+        }
+
+        .item-total {
+            font-weight: 700;
+            color: #667eea;
+            align-self: center;
+        }
+
+        .summary-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.8rem 0;
+            color: #4b5563;
+        }
+
+        .summary-row.total {
+            border-top: 2px solid #e5e7eb;
+            margin-top: 1rem;
+            padding-top: 1rem;
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: #1f2937;
+        }
+
+        .summary-row.total .amount {
+            color: #667eea;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 1.1rem 2rem;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s;
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+            border: none;
+            cursor: pointer;
+            font-size: 1.1rem;
+            width: 100%;
+            margin-top: 1.5rem;
+        }
+
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.5);
+        }
+
+        .secure-badge {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            margin-top: 1rem;
+            color: #10b981;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 600;
+            margin-bottom: 2rem;
+            transition: all 0.3s;
+        }
+
+        .back-link:hover {
+            color: #764ba2;
+            gap: 0.8rem;
+        }
+
+        footer {
+            background-color: #1f2937;
+            color: #9ca3af;
+            text-align: center;
+            padding: 2rem;
+            font-size: 0.95rem;
+            margin-top: 4rem;
+        }
+
+        @media (max-width: 968px) {
+            .checkout-wrapper {
+                grid-template-columns: 1fr;
+            }
+
+            .order-summary {
+                position: static;
+                order: -1;
+            }
+        }
+
+        @media (max-width: 576px) {
+            .page-header h2 {
+                font-size: 2rem;
+            }
+
+            .checkout-section,
+            .order-summary {
+                padding: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    {% include 'bookstore/navbar.html' %}
+
+    <section class="page-header">
+        <h2>💳 Checkout</h2>
+        <p>Complete your order securely</p>
+    </section>
+
+    <div class="container">
+        <a href="{% url 'view_cart' %}" class="back-link">
+            ← Back to Cart
+        </a>
+
+        <div class="checkout-wrapper">
+            <div class="checkout-section">
+                <h3 class="section-title">📍 Delivery Information</h3>
+                
+                <div class="delivery-info">
+                    <h4>Delivering to:</h4>
+                    <div class="info-row">
+                        <span class="info-label">Name:</span>
+                        <span class="info-value">{{ user.get_full_name|default:user.username }}</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Email:</span>
+                        <span class="info-value">{{ user.email }}</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Phone:</span>
+                        <span class="info-value">{{ user.customer.phone }}</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Address:</span>
+                        <span class="info-value">{{ user.customer.address }}</span>
+                    </div>
+                </div>
+
+                <h3 class="section-title">💰 Payment Method</h3>
+                
+                <form method="POST" id="checkoutForm">
+                    {% csrf_token %}
+                    
+                    <div class="payment-methods">
+                        <div class="payment-option">
+                            <input type="radio" id="cash" name="payment_method" value="Cash" checked>
+                            <label for="cash" class="payment-label">
+                                <div class="payment-icon">💵</div>
+                                <div class="payment-details">
+                                    <div class="payment-name">Cash on Delivery</div>
+                                    <div class="payment-desc">Pay when you receive your order</div>
+                                </div>
+                                <div class="radio-indicator"></div>
+                            </label>
+                        </div>
+
+                        <div class="payment-option">
+                            <input type="radio" id="card" name="payment_method" value="Card">
+                            <label for="card" class="payment-label">
+                                <div class="payment-icon">💳</div>
+                                <div class="payment-details">
+                                    <div class="payment-name">Credit/Debit Card</div>
+                                    <div class="payment-desc">Visa, Mastercard, or other cards</div>
+                                </div>
+                                <div class="radio-indicator"></div>
+                            </label>
+                        </div>
+
+                        <div class="payment-option">
+                            <input type="radio" id="upi" name="payment_method" value="UPI">
+                            <label for="upi" class="payment-label">
+                                <div class="payment-icon">📱</div>
+                                <div class="payment-details">
+                                    <div class="payment-name">UPI Payment</div>
+                                    <div class="payment-desc">Pay via UPI apps</div>
+                                </div>
+                                <div class="radio-indicator"></div>
+                            </label>
+                        </div>
+
+                        <div class="payment-option">
+                            <input type="radio" id="wallet" name="payment_method" value="Wallet">
+                            <label for="wallet" class="payment-label">
+                                <div class="payment-icon">👛</div>
+                                <div class="payment-details">
+                                    <div class="payment-name">E-Wallet</div>
+                                    <div class="payment-desc">Pay using digital wallets</div>
+                                </div>
+                                <div class="radio-indicator"></div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn">
+                        🔒 Complete Order
+                    </button>
+                </form>
+            </div>
+
+            <div class="order-summary">
+                <h3 class="summary-title">Order Summary</h3>
+                
+                <div class="order-items">
+                    {% for item in cart_items %}
+                    <div class="order-item">
+                        <div class="item-icon">📚</div>
+                        <div class="item-info">
+                            <div class="item-name">{{ item.book.title }}</div>
+                            <div class="item-qty-price">{{ item.quantity }} × Rs. {{ item.book.price }}</div>
+                        </div>
+                        <div class="item-total">Rs. {{ item.subtotal }}</div>
+                    </div>
+                    {% endfor %}
+                </div>
+                
+                <div class="summary-row">
+                    <span>Subtotal ({{ cart.total_items }} items)</span>
+                    <span class="amount">Rs. {{ cart.total_amount }}</span>
+                </div>
+                
+                <div class="summary-row">
+                    <span>Shipping Fee</span>
+                    <span class="amount">Rs. 150</span>
+                </div>
+                
+                <div class="summary-row total">
+                    <span>Total Amount</span>
+                    <span class="amount">Rs. {{ cart.total_amount|add:150 }}</span>
+                </div>
+
+                <div class="secure-badge">
+                    🔒 Secure Checkout
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <p>© 2025 Shelfly Online Bookstore. All rights reserved.</p>
+    </footer>
+
+</body>
+</html>

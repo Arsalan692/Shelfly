@@ -3,7 +3,7 @@ from django.contrib.auth import login, logout, authenticate
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.contrib import messages
-from .models import Book, Order, OrderItem, Customer, Payment
+from .models import Book, Order, OrderItem, Customer, Payment, Cart, CartItem
 from decimal import Decimal
 
 # Authentication Views
@@ -33,6 +33,7 @@ def register(request):
         user = User.objects.create_user(username=username, email=email, password=password)
         Customer.objects.create(user=user, phone=phone, address=address)
         
+        Cart.objects.create(customer=Customer.objects.get(user=user))
         messages.success(request, 'Account created successfully! Please login.')
         return redirect('login')
     
@@ -80,19 +81,8 @@ def book_detail(request, book_id):
 
 @login_required(login_url='login')
 def place_order(request, book_id):
-    book = get_object_or_404(Book, id=book_id)
-    customer = request.user.customer  # Get current logged-in customer
-
-    if book.stock <= 0:
-        messages.error(request, "Sorry, this book is out of stock!")
-        return redirect('book_list')
-
-    order = Order.objects.create(customer=customer)
-    OrderItem.objects.create(order=order, book=book, quantity=1, subtotal=book.price)
-    Payment.objects.create(order=order, amount=book.price, method="Cash", status="Paid")
-
-    messages.success(request, f"You successfully ordered '{book.title}'!")
-    return redirect('order_history')
+    # Redirect to add to cart instead
+    return redirect('add_to_cart', book_id=book_id)
 
 
 @login_required(login_url='login')
@@ -121,3 +111,125 @@ def contact(request):
         return redirect('contact')
     
     return render(request, 'bookstore/contact.html')
+
+
+from .models import Book, Order, OrderItem, Customer, Payment, Cart, CartItem
+
+@login_required(login_url='login')
+def add_to_cart(request, book_id):
+    book = get_object_or_404(Book, id=book_id)
+    customer = request.user.customer
+    
+    # Get or create cart for customer
+    cart, created = Cart.objects.get_or_create(customer=customer)
+    
+    # Check if book already in cart
+    cart_item, created = CartItem.objects.get_or_create(cart=cart, book=book)
+    
+    if not created:
+        # Book already in cart, increase quantity
+        if cart_item.quantity < book.stock:
+            cart_item.quantity += 1
+            cart_item.save()
+            messages.success(request, f"Increased quantity of '{book.title}' in cart!")
+        else:
+            messages.warning(request, f"Cannot add more. Only {book.stock} in stock!")
+    else:
+        messages.success(request, f"'{book.title}' added to cart!")
+    
+    return redirect('view_cart')
+
+
+@login_required(login_url='login')
+def view_cart(request):
+    customer = request.user.customer
+    cart, created = Cart.objects.get_or_create(customer=customer)
+    cart_items = cart.cartitem_set.all()
+    
+    context = {
+        'cart': cart,
+        'cart_items': cart_items,
+    }
+    return render(request, 'bookstore/cart.html', context)
+
+
+@login_required(login_url='login')
+def update_cart_item(request, item_id):
+    cart_item = get_object_or_404(CartItem, id=item_id, cart__customer=request.user.customer)
+    
+    if request.method == 'POST':
+        action = request.POST.get('action')
+        
+        if action == 'increase':
+            if cart_item.quantity < cart_item.book.stock:
+                cart_item.quantity += 1
+                cart_item.save()
+                messages.success(request, 'Quantity updated!')
+            else:
+                messages.warning(request, 'Maximum stock reached!')
+        
+        elif action == 'decrease':
+            if cart_item.quantity > 1:
+                cart_item.quantity -= 1
+                cart_item.save()
+                messages.success(request, 'Quantity updated!')
+            else:
+                messages.warning(request, 'Minimum quantity is 1!')
+    
+    return redirect('view_cart')
+
+
+@login_required(login_url='login')
+def remove_from_cart(request, item_id):
+    cart_item = get_object_or_404(CartItem, id=item_id, cart__customer=request.user.customer)
+    book_title = cart_item.book.title
+    cart_item.delete()
+    messages.success(request, f"'{book_title}' removed from cart!")
+    return redirect('view_cart')
+
+
+@login_required(login_url='login')
+def checkout(request):
+    customer = request.user.customer
+    cart = get_object_or_404(Cart, customer=customer)
+    cart_items = cart.cartitem_set.all()
+    
+    if not cart_items:
+        messages.warning(request, 'Your cart is empty!')
+        return redirect('view_cart')
+    
+    if request.method == 'POST':
+        payment_method = request.POST.get('payment_method', 'Cash')
+        
+        # Create Order
+        order = Order.objects.create(customer=customer)
+        
+        # Create Order Items from Cart Items
+        for cart_item in cart_items:
+            OrderItem.objects.create(
+                order=order,
+                book=cart_item.book,
+                quantity=cart_item.quantity,
+                unit_price=cart_item.book.price,
+                subtotal=cart_item.subtotal
+            )
+        
+        # Create Payment
+        Payment.objects.create(
+            order=order,
+            amount=order.total_amount,
+            method=payment_method,
+            status='Paid'  # For now, assume payment is successful
+        )
+        
+        # Clear the cart
+        cart_items.delete()
+        
+        messages.success(request, f'Order #{order.id} placed successfully!')
+        return redirect('order_history')
+    
+    context = {
+        'cart': cart,
+        'cart_items': cart_items,
+    }
+    return render(request, 'bookstore/checkout.html', context)

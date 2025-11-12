@@ -17,55 +17,6 @@
             color: #333;
         }
 
-        header {
-            background-color: #1f2937;
-            color: white;
-            padding: 1.2rem 3rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-            position: sticky;
-            top: 0;
-            z-index: 1000;
-        }
-
-        header h1 {
-            font-size: 1.8rem;
-            letter-spacing: 1px;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        nav a {
-            color: white;
-            text-decoration: none;
-            margin-left: 2rem;
-            font-weight: 500;
-            transition: color 0.3s;
-            position: relative;
-        }
-
-        nav a::after {
-            content: '';
-            position: absolute;
-            width: 0;
-            height: 2px;
-            bottom: -5px;
-            left: 0;
-            background-color: #22d3ee;
-            transition: width 0.3s;
-        }
-
-        nav a:hover::after {
-            width: 100%;
-        }
-
-        nav a:hover {
-            color: #22d3ee;
-        }
-
         .page-header {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
@@ -133,14 +84,12 @@
             }
         }
 
-        /* === Main Content === */
         .container {
             max-width: 1200px;
             margin: 0 auto;
             padding: 0 2rem;
         }
 
-        /* === Story Section === */
         .story-section {
             background: white;
             padding: 5rem 2rem;
@@ -167,7 +116,6 @@
             text-align: justify;
         }
 
-        /* === Values Section === */
         .values-section {
             padding: 5rem 2rem;
             text-align: center;
@@ -218,7 +166,6 @@
             font-size: 1rem;
         }
 
-        /* === Mission Section === */
         .mission-section {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
@@ -256,7 +203,6 @@
             z-index: 2;
         }
 
-        /* === Team Section === */
         .team-section {
             padding: 5rem 2rem;
             background: #f8f9fc;
@@ -321,7 +267,6 @@
             font-size: 0.95rem;
         }
 
-        /* === Stats Section === */
         .stats-section {
             padding: 4rem 2rem;
             background: white;
@@ -357,7 +302,6 @@
             font-weight: 500;
         }
 
-        /* === CTA Section === */
         .cta-section {
             padding: 5rem 2rem;
             text-align: center;
@@ -396,7 +340,6 @@
             box-shadow: 0 10px 30px rgba(102, 126, 234, 0.5);
         }
 
-        /* === Footer === */
         footer {
             background-color: #1f2937;
             color: #9ca3af;
@@ -414,7 +357,6 @@
             text-decoration: underline;
         }
 
-        /* === Responsive === */
         @media (max-width: 768px) {
             .page-header h2 {
                 font-size: 2.2rem;
@@ -422,15 +364,6 @@
 
             .page-header p {
                 font-size: 1.1rem;
-            }
-
-            header {
-                padding: 1rem 1.5rem;
-            }
-
-            nav a {
-                margin-left: 1rem;
-                font-size: 0.9rem;
             }
 
             .story-section,
@@ -452,24 +385,13 @@
 </head>
 <body>
 
-    
-    <header>
-        <h1>📚 Shelfly</h1>
-        <nav>
-            <a href="{% url 'home' %}">Home</a>
-            <a href="{% url 'book_list' %}">Books</a>
-            <a href="{% url 'about' %}">About</a>
-            <a href="{% url 'contact' %}">Contact</a>
-        </nav>
-    </header>
-
+    {% include 'bookstore/navbar.html' %}
 
     <section class="page-header">
         <h2>📖 About Shelfly</h2>
         <p>Your trusted partner in the world of books and knowledge</p>
     </section>
 
-   
     <section class="story-section">
         <h3>📚 Our Story</h3>
         <p>
@@ -489,7 +411,6 @@
         </p>
     </section>
 
-   
     <section class="stats-section">
         <div class="stats-grid">
             <div class="stat-card">
@@ -529,7 +450,6 @@
                 <h4>Fast Delivery</h4>
                 <p>We understand your excitement to start reading. That's why we ensure quick and reliable delivery to your doorstep.</p>
             </div>
-            
         </div>
     </section>
 

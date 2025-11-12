@@ -17,55 +17,6 @@
             color: #333;
         }
 
-        header {
-            background-color: #1f2937;
-            color: white;
-            padding: 1.2rem 3rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-            position: sticky;
-            top: 0;
-            z-index: 1000;
-        }
-
-        header h1 {
-            font-size: 1.8rem;
-            letter-spacing: 1px;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        nav a {
-            color: white;
-            text-decoration: none;
-            margin-left: 2rem;
-            font-weight: 500;
-            transition: color 0.3s;
-            position: relative;
-        }
-
-        nav a::after {
-            content: '';
-            position: absolute;
-            width: 0;
-            height: 2px;
-            bottom: -5px;
-            left: 0;
-            background-color: #22d3ee;
-            transition: width 0.3s;
-        }
-
-        nav a:hover::after {
-            width: 100%;
-        }
-
-        nav a:hover {
-            color: #22d3ee;
-        }
-
         .page-header {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
@@ -194,6 +145,11 @@
             background-color: #f9fafb;
         }
 
+        .form-group textarea {
+            resize: vertical;
+            min-height: 150px;
+        }
+
         .form-group input:focus,
         .form-group textarea:focus,
         .form-group select:focus {
@@ -201,11 +157,6 @@
             border-color: #667eea;
             background-color: white;
             box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-        }
-
-        .form-group textarea {
-            resize: vertical;
-            min-height: 150px;
         }
 
         .submit-btn {
@@ -416,15 +367,6 @@
                 font-size: 1.1rem;
             }
 
-            header {
-                padding: 1rem 1.5rem;
-            }
-
-            nav a {
-                margin-left: 1rem;
-                font-size: 0.9rem;
-            }
-
             .contact-form-section,
             .faq-section,
             .map-section {
@@ -440,25 +382,14 @@
 </head>
 <body>
 
-    <header>
-        <h1>📚 Shelfly</h1>
-        <nav>
-            <a href="{% url 'home' %}">Home</a>
-            <a href="{% url 'book_list' %}">Books</a>
-            <a href="{% url 'about' %}">About</a>
-            <a href="{% url 'contact' %}">Contact</a>
-        </nav>
-    </header>
+    {% include 'bookstore/navbar.html' %}
 
-  
     <section class="page-header">
         <h2>📞 Get In Touch</h2>
         <p>We'd love to hear from you! Reach out with any questions or feedback</p>
     </section>
 
- 
     <div class="contact-wrapper">
-     
         <div class="contact-form-section">
             <h3>📬 Send Us a Message</h3>
             <p>Fill out the form below and we'll get back to you as soon as possible.</p>
@@ -503,7 +434,6 @@
             </form>
         </div>
 
-        
         <div class="contact-info-section">
             <div class="info-card">
                 <div class="info-card-header">
@@ -555,7 +485,6 @@
         </div>
     </div>
 
-    
     <section class="faq-section">
         <h3>❓ Frequently Asked Questions</h3>
         <div class="faq-container">
@@ -611,7 +540,6 @@
         </div>
     </section>
 
-
     <section class="map-section">
         <h3>🗺️ Find Us</h3>
         <div class="map-container">
@@ -624,7 +552,6 @@
         </div>
     </section>
 
- 
     <footer>
         <p>© 2025 Shelfly Online Bookstore. All rights reserved.</p>
         <p>Built with ❤️ for book lovers | <a href="#">Privacy Policy</a> | <a href="#">Terms of Service</a></p>
@@ -634,7 +561,6 @@
         function toggleFaq(element) {
             const faqItem = element.parentElement;
             const wasActive = faqItem.classList.contains('active');
-            
             
             document.querySelectorAll('.faq-item').forEach(item => {
                 item.classList.remove('active');
@@ -647,4 +573,4 @@
     </script>
 
 </body>
-</html> 
+</html>

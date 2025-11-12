@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.contrib.auth.models import User
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
-from .models import Customer, Book, Order, OrderItem, Payment
+from .models import Customer, Book, Order, OrderItem, Payment, Cart, CartItem
 
 # Inline Customer info with User
 class CustomerInline(admin.StackedInline):
@@ -43,3 +43,13 @@ class OrderItemAdmin(admin.ModelAdmin):
 class PaymentAdmin(admin.ModelAdmin):
     list_display = ('order', 'amount', 'method', 'status', 'date')
     list_filter = ('status', 'method', 'date')
+
+
+@admin.register(Cart)
+class CartAdmin(admin.ModelAdmin):
+    list_display = ('id', 'customer', 'total_items', 'total_amount', 'updated_at')
+    search_fields = ('customer__user__username',)
+
+@admin.register(CartItem)
+class CartItemAdmin(admin.ModelAdmin):
+    list_display = ('cart', 'book', 'quantity', 'subtotal', 'added_at')
