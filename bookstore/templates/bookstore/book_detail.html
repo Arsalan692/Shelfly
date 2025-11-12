@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ book.title }} | Shelfly</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: "Poppins", sans-serif;
+            background-color: #f8f9fc;
+            color: #333;
+        }
+
+        header {
+            background-color: #1f2937;
+            color: white;
+            padding: 1.2rem 3rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        header h1 {
+            font-size: 1.8rem;
+            letter-spacing: 1px;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        nav a {
+            color: white;
+            text-decoration: none;
+            margin-left: 2rem;
+            font-weight: 500;
+            transition: color 0.3s;
+            position: relative;
+        }
+
+        nav a::after {
+            content: '';
+            position: absolute;
+            width: 0;
+            height: 2px;
+            bottom: -5px;
+            left: 0;
+            background-color: #22d3ee;
+            transition: width 0.3s;
+        }
+
+        nav a:hover::after {
+            width: 100%;
+        }
+
+        nav a:hover {
+            color: #22d3ee;
+        }
+
+        /* === Main Container === */
+        .container {
+            max-width: 1000px;
+            margin: 3rem auto 5rem auto;
+            background: white;
+            border-radius: 25px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+            padding: 0;
+            overflow: hidden;
+            animation: fadeInUp 0.6s ease;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* === Book Header with Gradient === */
+        .book-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            text-align: center;
+            padding: 3rem 2rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .book-header::before {
+            content: '';
+            position: absolute;
+            width: 400px;
+            height: 400px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            top: -200px;
+            right: -200px;
+        }
+
+        .book-header::after {
+            content: '';
+            position: absolute;
+            width: 300px;
+            height: 300px;
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 50%;
+            bottom: -150px;
+            left: -150px;
+        }
+
+        .book-header h2 {
+            font-size: 2.5rem;
+            margin-bottom: 0.8rem;
+            font-weight: 700;
+            position: relative;
+            z-index: 2;
+        }
+
+        .book-header .author {
+            font-size: 1.3rem;
+            opacity: 0.95;
+            font-style: italic;
+            position: relative;
+            z-index: 2;
+        }
+
+        /* === Book Info Section === */
+        .book-info {
+            padding: 3rem;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .info-card {
+            background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+            padding: 1.2rem;
+            border-radius: 15px;
+            border-left: 4px solid #667eea;
+            transition: transform 0.3s;
+        }
+
+        .info-card:hover {
+            transform: translateX(5px);
+        }
+
+        .info-card strong {
+            color: #1f2937;
+            display: block;
+            margin-bottom: 0.5rem;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .info-card span {
+            color: #4b5563;
+            font-size: 1.1rem;
+        }
+
+        /* === Price Box === */
+        .price-box {
+            font-size: 2.2rem;
+            color: #059669;
+            font-weight: bold;
+            text-align: center;
+            padding: 1.5rem;
+            background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+            border-radius: 15px;
+            margin: 2rem 0;
+            box-shadow: 0 5px 20px rgba(5, 150, 105, 0.2);
+        }
+
+        /* === Description === */
+        .description {
+            background: linear-gradient(135deg, #ede9fe 0%, #ddd6fe 100%);
+            padding: 2rem;
+            border-radius: 15px;
+            border-left: 5px solid #667eea;
+            margin: 2rem 0;
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.1);
+        }
+
+        .description h3 {
+            margin-top: 0;
+            margin-bottom: 1rem;
+            color: #667eea;
+            font-size: 1.4rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .description p {
+            color: #4b5563;
+            line-height: 1.8;
+            font-size: 1.05rem;
+        }
+
+        /* === Stock Status === */
+        .stock-status {
+            display: inline-block;
+            padding: 0.6rem 1.2rem;
+            border-radius: 50px;
+            font-weight: 600;
+            font-size: 0.95rem;
+        }
+
+        .stock-available {
+            background-color: #d1fae5;
+            color: #059669;
+        }
+
+        .stock-out {
+            background-color: #fee2e2;
+            color: #dc2626;
+        }
+
+        .stock-warning {
+            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+            color: #b45309;
+            padding: 1rem 1.5rem;
+            border-radius: 12px;
+            text-align: center;
+            margin: 1.5rem 0;
+            border-left: 4px solid #f59e0b;
+            font-weight: 600;
+            box-shadow: 0 4px 15px rgba(245, 158, 11, 0.2);
+        }
+
+        .out-of-stock {
+            background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+            color: #dc2626;
+            font-weight: bold;
+            padding: 1.5rem;
+            border-radius: 12px;
+            text-align: center;
+            margin: 1.5rem 0;
+            border-left: 4px solid #dc2626;
+            font-size: 1.1rem;
+            box-shadow: 0 4px 15px rgba(220, 38, 38, 0.2);
+        }
+
+        /* === Buttons === */
+        .btn-container {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            margin-top: 3rem;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 1rem 2.5rem;
+            border-radius: 50px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.3s;
+            font-size: 1.05rem;
+            border: none;
+            cursor: pointer;
+        }
+
+        .btn-buy {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-buy:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.5);
+        }
+
+        .btn-back {
+            background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+            color: #1f2937;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn-back:hover {
+            background: linear-gradient(135deg, #e5e7eb 0%, #d1d5db 100%);
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+        }
+
+        /* === Footer === */
+        footer {
+            background-color: #1f2937;
+            color: #9ca3af;
+            text-align: center;
+            padding: 2rem;
+            font-size: 0.95rem;
+        }
+
+        footer a {
+            color: #22d3ee;
+            text-decoration: none;
+        }
+
+        footer a:hover {
+            text-decoration: underline;
+        }
+
+        /* === Responsive === */
+        @media (max-width: 768px) {
+            .book-header h2 {
+                font-size: 2rem;
+            }
+
+            .book-header .author {
+                font-size: 1.1rem;
+            }
+
+            .book-info {
+                padding: 2rem 1.5rem;
+            }
+
+            .info-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .price-box {
+                font-size: 1.8rem;
+            }
+
+            .btn-container {
+                flex-direction: column;
+            }
+
+            .btn {
+                width: 100%;
+            }
+
+            header {
+                padding: 1rem 1.5rem;
+            }
+
+            nav a {
+                margin-left: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>📚 Shelfly</h1>
+        <nav>
+            <a href="{% url 'home' %}">Home</a>
+            <a href="{% url 'book_list' %}">Books</a>
+            <a href="{% url 'about' %}">About</a>
+            <a href="{% url 'contact' %}">Contact</a>
+        </nav>
+    </header>
+
+    <main class="container">
+        <div class="book-header">
+            <h2>{{ book.title }}</h2>
+            <p class="author">by {{ book.author }}</p>
+        </div>
+
+        <div class="book-info">
+            <div class="info-grid">
+                <div class="info-card">
+                    <strong>📚 Category</strong>
+                    <span>{{ book.category }}</span>
+                </div>
+                
+                {% if book.isbn %}
+                <div class="info-card">
+                    <strong>📖 ISBN</strong>
+                    <span>{{ book.isbn }}</span>
+                </div>
+                {% endif %}
+
+                <div class="info-card">
+                    <strong>📦 Availability</strong>
+                    {% if book.stock > 0 %}
+                        <span class="stock-status stock-available">✅ {{ book.stock }} in stock</span>
+                    {% else %}
+                        <span class="stock-status stock-out">❌ Out of Stock</span>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="price-box">
+                💰 Rs. {{ book.price }}
+            </div>
+
+            {% if book.description %}
+                <div class="description">
+                    <h3>📝 About This Book</h3>
+                    <p>{{ book.description }}</p>
+                </div>
+            {% endif %}
+
+            {% if book.stock > 0 and book.stock <= 5 %}
+                <div class="stock-warning">
+                    ⚠️ Hurry! Only {{ book.stock }} copies left in stock!
+                </div>
+            {% endif %}
+
+            {% if book.stock == 0 %}
+                <div class="out-of-stock">
+                    ❌ This book is currently out of stock. Check back soon!
+                </div>
+            {% endif %}
+
+            <div class="btn-container">
+                {% if book.stock > 0 %}
+                    <form action="{% url 'place_order' book.id %}" method="post" style="display:inline;">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-buy">🛒 Buy Now</button>
+                    </form>
+                {% endif %}
+
+                <a href="{% url 'book_list' %}" class="btn btn-back">← Back to Books</a>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <p>© 2025 Shelfly Online Bookstore. All rights reserved.</p>
+        <p>Built with ❤️ for book lovers | <a href="#">Privacy Policy</a> | <a href="#">Terms of Service</a></p>
+    </footer>
+
+</body>
+</html>
