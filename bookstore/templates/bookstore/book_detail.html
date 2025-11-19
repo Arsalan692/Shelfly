@@ -1,3 +1,4 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -18,12 +19,11 @@
         }
 
         .container {
-            max-width: 1000px;
+            max-width: 1100px;
             margin: 3rem auto 5rem auto;
             background: white;
             border-radius: 25px;
             box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
-            padding: 0;
             overflow: hidden;
             animation: fadeInUp 0.6s ease;
         }
@@ -39,68 +39,91 @@
             }
         }
 
-        .book-header {
+        .book-detail-wrapper {
+            display: grid;
+            grid-template-columns: 400px 1fr;
+            gap: 0;
+        }
+
+        .book-image-section {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            text-align: center;
-            padding: 3rem 2rem;
+            padding: 3rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             position: relative;
             overflow: hidden;
         }
 
-        .book-header::before {
-            content: '';
-            position: absolute;
-            width: 400px;
-            height: 400px;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 50%;
-            top: -200px;
-            right: -200px;
-        }
-
-        .book-header::after {
+        .book-image-section::before {
             content: '';
             position: absolute;
             width: 300px;
             height: 300px;
-            background: rgba(255, 255, 255, 0.08);
+            background: rgba(255, 255, 255, 0.1);
             border-radius: 50%;
-            bottom: -150px;
-            left: -150px;
+            top: -100px;
+            right: -100px;
         }
 
-        .book-header h2 {
-            font-size: 2.5rem;
-            margin-bottom: 0.8rem;
-            font-weight: 700;
+        .book-cover-container {
+            width: 100%;
+            max-width: 300px;
             position: relative;
             z-index: 2;
         }
 
-        .book-header .author {
-            font-size: 1.3rem;
-            opacity: 0.95;
-            font-style: italic;
-            position: relative;
-            z-index: 2;
+        .book-cover-container img {
+            width: 100%;
+            height: auto;
+            max-height: 500px;
+            object-fit: contain;
+            object-position: center;
+            border-radius: 15px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+            transition: transform 0.3s ease;
+            background: white;
+        }
+
+        .book-cover-container img:hover {
+            transform: scale(1.05);
         }
 
         .book-info {
             padding: 3rem;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .book-header {
+            margin-bottom: 2rem;
+        }
+
+        .book-header h2 {
+            font-size: 2.2rem;
+            margin-bottom: 0.8rem;
+            color: #1f2937;
+            font-weight: 700;
+            line-height: 1.3;
+        }
+
+        .book-header .author {
+            font-size: 1.2rem;
+            color: #6b7280;
+            font-style: italic;
         }
 
         .info-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 1.5rem;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.2rem;
             margin-bottom: 2rem;
         }
 
         .info-card {
             background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
-            padding: 1.2rem;
-            border-radius: 15px;
+            padding: 1rem;
+            border-radius: 12px;
             border-left: 4px solid #667eea;
             transition: transform 0.3s;
         }
@@ -112,35 +135,35 @@
         .info-card strong {
             color: #1f2937;
             display: block;
-            margin-bottom: 0.5rem;
-            font-size: 0.9rem;
+            margin-bottom: 0.4rem;
+            font-size: 0.85rem;
             text-transform: uppercase;
             letter-spacing: 0.5px;
         }
 
         .info-card span {
             color: #4b5563;
-            font-size: 1.1rem;
+            font-size: 1.05rem;
         }
 
         .price-box {
-            font-size: 2.2rem;
+            font-size: 2rem;
             color: #059669;
             font-weight: bold;
             text-align: center;
-            padding: 1.5rem;
+            padding: 1.3rem;
             background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
             border-radius: 15px;
-            margin: 2rem 0;
+            margin: 1.5rem 0;
             box-shadow: 0 5px 20px rgba(5, 150, 105, 0.2);
         }
 
         .description {
             background: linear-gradient(135deg, #ede9fe 0%, #ddd6fe 100%);
-            padding: 2rem;
+            padding: 1.8rem;
             border-radius: 15px;
             border-left: 5px solid #667eea;
-            margin: 2rem 0;
+            margin: 1.5rem 0;
             box-shadow: 0 5px 15px rgba(102, 126, 234, 0.1);
         }
 
@@ -148,7 +171,7 @@
             margin-top: 0;
             margin-bottom: 1rem;
             color: #667eea;
-            font-size: 1.4rem;
+            font-size: 1.3rem;
             display: flex;
             align-items: center;
             gap: 0.5rem;
@@ -157,7 +180,7 @@
         .description p {
             color: #4b5563;
             line-height: 1.8;
-            font-size: 1.05rem;
+            font-size: 1rem;
         }
 
         .stock-status {
@@ -184,7 +207,7 @@
             padding: 1rem 1.5rem;
             border-radius: 12px;
             text-align: center;
-            margin: 1.5rem 0;
+            margin: 1.2rem 0;
             border-left: 4px solid #f59e0b;
             font-weight: 600;
             box-shadow: 0 4px 15px rgba(245, 158, 11, 0.2);
@@ -194,12 +217,12 @@
             background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
             color: #dc2626;
             font-weight: bold;
-            padding: 1.5rem;
+            padding: 1.3rem;
             border-radius: 12px;
             text-align: center;
-            margin: 1.5rem 0;
+            margin: 1.2rem 0;
             border-left: 4px solid #dc2626;
-            font-size: 1.1rem;
+            font-size: 1rem;
             box-shadow: 0 4px 15px rgba(220, 38, 38, 0.2);
         }
 
@@ -207,12 +230,12 @@
             display: flex;
             gap: 1rem;
             justify-content: center;
-            margin-top: 3rem;
+            margin-top: 2rem;
             flex-wrap: wrap;
         }
 
         .btn {
-            padding: 1rem 2.5rem;
+            padding: 1rem 2.2rem;
             border-radius: 50px;
             font-weight: 600;
             text-decoration: none;
@@ -262,25 +285,43 @@
             text-decoration: underline;
         }
 
-        @media (max-width: 768px) {
-            .book-header h2 {
-                font-size: 2rem;
+        @media (max-width: 968px) {
+            .book-detail-wrapper {
+                grid-template-columns: 1fr;
             }
 
-            .book-header .author {
-                font-size: 1.1rem;
+            .book-image-section {
+                padding: 2rem;
+            }
+
+            .book-cover-container {
+                max-width: 250px;
             }
 
             .book-info {
                 padding: 2rem 1.5rem;
             }
 
+            .book-header h2 {
+                font-size: 1.8rem;
+            }
+
             .info-grid {
                 grid-template-columns: 1fr;
             }
+        }
+
+        @media (max-width: 576px) {
+            .book-header h2 {
+                font-size: 1.6rem;
+            }
+
+            .book-header .author {
+                font-size: 1rem;
+            }
 
             .price-box {
-                font-size: 1.8rem;
+                font-size: 1.6rem;
             }
 
             .btn-container {
@@ -298,64 +339,76 @@
     {% include 'bookstore/navbar.html' %}
 
     <main class="container">
-        <div class="book-header">
-            <h2>{{ book.title }}</h2>
-            <p class="author">by {{ book.author }}</p>
-        </div>
-
-        <div class="book-info">
-            <div class="info-grid">
-                <div class="info-card">
-                    <strong>📚 Category</strong>
-                    <span>{{ book.category }}</span>
-                </div>
-                
-                {% if book.isbn %}
-                <div class="info-card">
-                    <strong>📖 ISBN</strong>
-                    <span>{{ book.isbn }}</span>
-                </div>
-                {% endif %}
-
-                <div class="info-card">
-                    <strong>📦 Availability</strong>
-                    {% if book.stock > 0 %}
-                        <span class="stock-status stock-available">✅ {{ book.stock }} in stock</span>
+        <div class="book-detail-wrapper">
+            <div class="book-image-section">
+                <div class="book-cover-container">
+                    {% if book.cover_image %}
+                        <img src="{{ book.cover_image.url }}" alt="{{ book.title }}">
                     {% else %}
-                        <span class="stock-status stock-out">❌ Out of Stock</span>
+                        <img src="{% static 'images/no-cover.png' %}" alt="{{ book.title }}">
                     {% endif %}
                 </div>
             </div>
 
-            <div class="price-box">
-                💰 Rs. {{ book.price }}
-            </div>
-
-            {% if book.description %}
-                <div class="description">
-                    <h3>📝 About This Book</h3>
-                    <p>{{ book.description }}</p>
+            <div class="book-info">
+                <div class="book-header">
+                    <h2>{{ book.title }}</h2>
+                    <p class="author">by {{ book.author }}</p>
                 </div>
-            {% endif %}
 
-            {% if book.stock > 0 and book.stock <= 5 %}
-                <div class="stock-warning">
-                    ⚠️ Hurry! Only {{ book.stock }} copies left in stock!
+                <div class="info-grid">
+                    <div class="info-card">
+                        <strong>📚 Category</strong>
+                        <span>{{ book.category }}</span>
+                    </div>
+                    
+                    {% if book.isbn %}
+                    <div class="info-card">
+                        <strong>📖 ISBN</strong>
+                        <span>{{ book.isbn }}</span>
+                    </div>
+                    {% endif %}
+
+                    <div class="info-card">
+                        <strong>📦 Availability</strong>
+                        {% if book.stock > 0 %}
+                            <span class="stock-status stock-available">✅ {{ book.stock }} in stock</span>
+                        {% else %}
+                            <span class="stock-status stock-out">❌ Out of Stock</span>
+                        {% endif %}
+                    </div>
                 </div>
-            {% endif %}
 
-            {% if book.stock == 0 %}
-                <div class="out-of-stock">
-                    ❌ This book is currently out of stock. Check back soon!
+                <div class="price-box">
+                    💰 Rs. {{ book.price }}
                 </div>
-            {% endif %}
 
-            <div class="btn-container">
-                {% if book.stock > 0 %}
-                    <a href="{% url 'add_to_cart' book.id %}" class="btn btn-cart">🛒 Add to Cart</a>
+                {% if book.description %}
+                    <div class="description">
+                        <h3>📝 About This Book</h3>
+                        <p>{{ book.description }}</p>
+                    </div>
                 {% endif %}
 
-                <a href="{% url 'book_list' %}" class="btn btn-back">← Back to Books</a>
+                {% if book.stock > 0 and book.stock <= 5 %}
+                    <div class="stock-warning">
+                        ⚠️ Hurry! Only {{ book.stock }} copies left in stock!
+                    </div>
+                {% endif %}
+
+                {% if book.stock == 0 %}
+                    <div class="out-of-stock">
+                        ❌ This book is currently out of stock. Check back soon!
+                    </div>
+                {% endif %}
+
+                <div class="btn-container">
+                    {% if book.stock > 0 %}
+                        <a href="{% url 'add_to_cart' book.id %}" class="btn btn-cart">🛒 Add to Cart</a>
+                    {% endif %}
+
+                    <a href="{% url 'book_list' %}" class="btn btn-back">← Back to Books</a>
+                </div>
             </div>
         </div>
     </main>

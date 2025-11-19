@@ -25,15 +25,27 @@ class CustomerAdmin(admin.ModelAdmin):
 
 @admin.register(Book)
 class BookAdmin(admin.ModelAdmin):
-    list_display = ('id', 'title', 'author', 'category', 'price', 'stock', 'isbn')
+    list_display = ('id', 'title', 'author', 'category', 'price', 'stock', 'isbn', 'cover_image_preview')
     search_fields = ('title', 'author', 'isbn')
     list_filter = ('category',)
+    
+    def cover_image_preview(self, obj):
+        if obj.cover_image:
+            return f'<img src="{obj.cover_image.url}" width="50" height="75" />'
+        return "No Image"
+    
+    cover_image_preview.allow_tags = True
+    cover_image_preview.short_description = 'Cover'
 
 @admin.register(Order)
 class OrderAdmin(admin.ModelAdmin):
-    list_display = ('id', 'customer', 'order_date', 'status', 'total_amount')
+    list_display = ('id', 'customer', 'order_date', 'status', 'subtotal_display', 'shipping_fee', 'total_amount')
     list_filter = ('status', 'order_date')
     search_fields = ('customer__user__username',)
+    
+    def subtotal_display(self, obj):
+        return f"Rs. {obj.subtotal}"
+    subtotal_display.short_description = 'Subtotal'
 
 @admin.register(OrderItem)
 class OrderItemAdmin(admin.ModelAdmin):
@@ -44,11 +56,24 @@ class PaymentAdmin(admin.ModelAdmin):
     list_display = ('order', 'amount', 'method', 'status', 'date')
     list_filter = ('status', 'method', 'date')
 
-
 @admin.register(Cart)
 class CartAdmin(admin.ModelAdmin):
-    list_display = ('id', 'customer', 'total_items', 'total_amount', 'updated_at')
+    list_display = ('id', 'customer', 'total_items', 'subtotal_display', 'shipping_display', 'total_display', 'updated_at')
     search_fields = ('customer__user__username',)
+    
+    def subtotal_display(self, obj):
+        return f"Rs. {obj.subtotal}"
+    subtotal_display.short_description = 'Subtotal'
+    
+    def shipping_display(self, obj):
+        if obj.shipping_fee == 0:
+            return "FREE"
+        return f"Rs. {obj.shipping_fee}"
+    shipping_display.short_description = 'Shipping'
+    
+    def total_display(self, obj):
+        return f"Rs. {obj.total_amount}"
+    total_display.short_description = 'Total'
 
 @admin.register(CartItem)
 class CartItemAdmin(admin.ModelAdmin):

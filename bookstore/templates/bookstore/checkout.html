@@ -505,29 +505,7 @@
                             </label>
                         </div>
 
-                        <div class="payment-option">
-                            <input type="radio" id="upi" name="payment_method" value="UPI">
-                            <label for="upi" class="payment-label">
-                                <div class="payment-icon">📱</div>
-                                <div class="payment-details">
-                                    <div class="payment-name">UPI Payment</div>
-                                    <div class="payment-desc">Pay via UPI apps</div>
-                                </div>
-                                <div class="radio-indicator"></div>
-                            </label>
-                        </div>
-
-                        <div class="payment-option">
-                            <input type="radio" id="wallet" name="payment_method" value="Wallet">
-                            <label for="wallet" class="payment-label">
-                                <div class="payment-icon">👛</div>
-                                <div class="payment-details">
-                                    <div class="payment-name">E-Wallet</div>
-                                    <div class="payment-desc">Pay using digital wallets</div>
-                                </div>
-                                <div class="radio-indicator"></div>
-                            </label>
-                        </div>
+                       
                     </div>
 
                     <button type="submit" class="btn">
@@ -554,18 +532,28 @@
                 
                 <div class="summary-row">
                     <span>Subtotal ({{ cart.total_items }} items)</span>
-                    <span class="amount">Rs. {{ cart.total_amount }}</span>
+                    <span class="amount">Rs. {{ cart.subtotal }}</span>
                 </div>
                 
                 <div class="summary-row">
                     <span>Shipping Fee</span>
-                    <span class="amount">Rs. 0.00</span>
+                    {% if cart.shipping_fee == 0 %}
+                        <span class="amount" style="color: #10b981; font-weight: 600;">FREE ✓</span>
+                    {% else %}
+                        <span class="amount">Rs. {{ cart.shipping_fee }}</span>
+                    {% endif %}
                 </div>
                 
                 <div class="summary-row total">
                     <span>Total Amount</span>
                     <span class="amount">Rs. {{ cart.total_amount }}</span>
                 </div>
+                
+                {% if cart.subtotal < 5000 and cart.subtotal > 0 %}
+                <div style="background: #fef3c7; color: #92400e; padding: 0.8rem; font-weight: 600; border-radius: 10px; text-align: center; font-size: 0.85rem; margin-top: 1rem;">
+                    💡 Bonus Tip: You can get FREE shipping on orders over Rs 5,000!
+                </div>
+                {% endif %}
 
                 <div class="secure-badge">
                     🔒 Secure Checkout

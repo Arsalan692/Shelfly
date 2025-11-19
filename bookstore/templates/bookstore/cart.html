@@ -1,3 +1,4 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -165,7 +166,7 @@
 
         .cart-item {
             display: grid;
-            grid-template-columns: 100px 1fr auto;
+            grid-template-columns: 120px 1fr auto;
             gap: 1.5rem;
             padding: 1.5rem;
             border-bottom: 1px solid #e5e7eb;
@@ -183,15 +184,20 @@
         }
 
         .item-image {
-            width: 100px;
-            height: 140px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            width: 120px;
+            height: 160px;
             border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 3rem;
-            color: white;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            position: relative;
+        }
+
+        .item-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            object-position: center;
+            background: #f3f4f6;
         }
 
         .item-details {
@@ -372,8 +378,13 @@
             }
 
             .cart-item {
-                grid-template-columns: 80px 1fr;
+                grid-template-columns: 100px 1fr;
                 gap: 1rem;
+            }
+
+            .item-image {
+                width: 100px;
+                height: 140px;
             }
 
             .item-actions {
@@ -425,7 +436,13 @@
             <div class="cart-items">
                 {% for item in cart_items %}
                 <div class="cart-item">
-                    <div class="item-image">📚</div>
+                    <div class="item-image">
+                        {% if item.book.cover_image %}
+                            <img src="{{ item.book.cover_image.url }}" alt="{{ item.book.title }}">
+                        {% else %}
+                            <img src="{% static 'images/no-cover.png' %}" alt="{{ item.book.title }}">
+                        {% endif %}
+                    </div>
                     
                     <div class="item-details">
                         <div class="item-title">{{ item.book.title }}</div>
@@ -453,7 +470,7 @@
                         
                         <form method="POST" action="{% url 'remove_from_cart' item.id %}" style="display: inline;">
                             {% csrf_token %}
-                            <button type="submit" class="remove-btn">🗑️ Remove</button>
+                            <button type="submit" class="remove-btn" onclick="return confirm('Remove this item from cart?')">🗑️ Remove</button>
                         </form>
                         
                         <div class="item-subtotal">Rs. {{ item.subtotal }}</div>
@@ -467,18 +484,28 @@
                 
                 <div class="summary-row">
                     <span>Items ({{ cart.total_items }})</span>
-                    <span class="amount">Rs. {{ cart.total_amount }}</span>
+                    <span class="amount">Rs. {{ cart.subtotal }}</span>
                 </div>
                 
                 <div class="summary-row">
                     <span>Shipping</span>
-                    <span class="amount">Rs. 0.00</span>
+                    {% if cart.shipping_fee == 0 %}
+                        <span class="amount" style="color: #10b981; font-weight: 600;">FREE ✓</span>
+                    {% else %}
+                        <span class="amount">Rs. {{ cart.shipping_fee }}</span>
+                    {% endif %}
                 </div>
                 
                 <div class="summary-row total">
                     <span>Total</span>
                     <span class="amount">Rs. {{ cart.total_amount }}</span>
                 </div>
+                
+                {% if cart.subtotal < 1000 and cart.subtotal > 0 %}
+                <div style="background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); color: #92400e; padding: 1rem; border-radius: 12px; text-align: center; font-size: 0.9rem; margin-top: 1rem; border-left: 4px solid #f59e0b;">
+                    💡 <strong>Tip:</strong> Add Rs. {{ 1000|add:"-"|add:cart.subtotal }} more to get FREE shipping!
+                </div>
+                {% endif %}
                 
                 <a href="{% url 'checkout' %}" class="btn checkout-btn">
                     Proceed to Checkout →

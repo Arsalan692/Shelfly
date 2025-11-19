@@ -1,3 +1,5 @@
+{% load static %}
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -56,19 +58,20 @@
 
         .book-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
             gap: 2.5rem;
         }
 
         .book-card {
             background: white;
-            padding: 2rem;
             border-radius: 20px;
             box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
             transition: all 0.3s ease;
             border-top: 4px solid #667eea;
             position: relative;
             overflow: hidden;
+            display: flex;
+            flex-direction: column;
         }
 
         .book-card::before {
@@ -80,6 +83,7 @@
             height: 100%;
             background: linear-gradient(90deg, transparent, rgba(102, 126, 234, 0.1), transparent);
             transition: left 0.5s;
+            z-index: 1;
         }
 
         .book-card:hover::before {
@@ -91,15 +95,45 @@
             box-shadow: 0 15px 35px rgba(102, 126, 234, 0.2);
         }
 
+        .book-cover {
+            width: 100%;
+            height: 350px;
+            overflow: hidden;
+            position: relative;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .book-cover img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            object-position: center;
+            transition: transform 0.3s ease;
+            background: #f3f4f6;
+        }
+
+        .book-card:hover .book-cover img {
+            transform: scale(1.05);
+        }
+
+        .book-content {
+            padding: 1.5rem;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
         .book-card h3 {
-            margin: 0 0 1rem 0;
+            margin: 0 0 0.8rem 0;
             color: #667eea;
-            font-size: 1.4rem;
+            font-size: 1.3rem;
             font-weight: 600;
+            line-height: 1.4;
+            min-height: 2.8rem;
         }
 
         .book-card p {
-            margin: 0.7rem 0;
+            margin: 0.5rem 0;
             font-size: 0.95rem;
             color: #4b5563;
         }
@@ -109,13 +143,13 @@
         }
 
         .price {
-            font-size: 1.5rem;
+            font-size: 1.4rem;
             color: #059669;
             font-weight: bold;
-            margin: 1.2rem 0;
+            margin: 1rem 0;
             display: block;
             background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
-            padding: 0.8rem;
+            padding: 0.7rem;
             border-radius: 10px;
             text-align: center;
         }
@@ -126,7 +160,7 @@
             padding: 0.5rem;
             border-radius: 8px;
             text-align: center;
-            margin: 1rem 0;
+            margin: 0.8rem 0;
             font-weight: 500;
         }
 
@@ -149,22 +183,25 @@
             display: flex;
             justify-content: space-between;
             align-items: stretch;
-            gap: 1rem;
-            margin-top: 1.8rem;
+            gap: 0.8rem;
+            margin-top: auto;
+            padding-top: 1rem;
         }
 
         .btn {
             flex: 1;
-            padding: 1rem 1.4rem;
+            padding: 0.9rem 1.2rem;
             border-radius: 12px;
             text-decoration: none;
             font-weight: 600;
             text-align: center;
             transition: all 0.3s ease;
-            font-size: 1rem;
+            font-size: 0.95rem;
             white-space: nowrap;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
-
 
         .btn-primary {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -217,6 +254,7 @@
             transition: all 0.3s;
             opacity: 0;
             pointer-events: none;
+            z-index: 100;
         }
 
         .back-to-top.visible {
@@ -259,6 +297,10 @@
             .book-actions {
                 flex-direction: column;
             }
+
+            .book-cover {
+                height: 300px;
+            }
         }
     </style>
 </head>
@@ -275,27 +317,37 @@
         <div class="book-grid">
             {% for book in books %}
                 <div class="book-card">
-                    <h3>{{ book.title }}</h3>
-                    <p><strong>✍️ Author:</strong> {{ book.author }}</p>
-                    <p><strong>📚 Category:</strong> {{ book.category }}</p>
-                    
-                    <div class="price">💰 Rs. {{ book.price }}</div>
-                    
-                    {% if book.stock > 0 %}
-                        {% if book.stock <= 5 %}
-                            <p class="stock-info stock-low">⚠️ Only {{ book.stock }} left in stock!</p>
+                    <div class="book-cover">
+                        {% if book.cover_image %}
+                            <img src="{{ book.cover_image.url }}" alt="{{ book.title }}">
                         {% else %}
-                            <p class="stock-info stock-available">✅ In Stock ({{ book.stock }} available)</p>
+                            <img src="{% static 'images/no-cover.png' %}" alt="{{ book.title }}">
                         {% endif %}
-                    {% else %}
-                        <p class="stock-info stock-out">❌ Out of Stock</p>
-                    {% endif %}
+                    </div>
                     
-                    <div class="book-actions">
+                    <div class="book-content">
+                        <h3>{{ book.title }}</h3>
+                        <p><strong>✍️ Author:</strong> {{ book.author }}</p>
+                        <p><strong>📚 Category:</strong> {{ book.category }}</p>
+                        
+                        <div class="price">💰 Rs. {{ book.price }}</div>
+                        
                         {% if book.stock > 0 %}
-                            <a href="{% url 'add_to_cart' book.id %}" class="btn btn-primary">🛒 Add to Cart</a>
+                            {% if book.stock <= 5 %}
+                                <p class="stock-info stock-low">⚠️ Only {{ book.stock }} left in stock!</p>
+                            {% else %}
+                                <p class="stock-info stock-available">✅ In Stock ({{ book.stock }} available)</p>
+                            {% endif %}
+                        {% else %}
+                            <p class="stock-info stock-out">❌ Out of Stock</p>
                         {% endif %}
-                        <a href="{% url 'book_detail' book.id %}" class="btn btn-secondary">View Details</a>
+                        
+                        <div class="book-actions">
+                            {% if book.stock > 0 %}
+                                <a href="{% url 'add_to_cart' book.id %}" class="btn btn-primary">🛒 Add to Cart</a>
+                            {% endif %}
+                            <a href="{% url 'book_detail' book.id %}" class="btn btn-secondary">View Details</a>
+                        </div>
                     </div>
                 </div>
             {% empty %}

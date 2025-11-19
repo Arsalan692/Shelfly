@@ -3,6 +3,7 @@ from django.contrib.auth.models import User
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.core.exceptions import ValidationError
+from decimal import Decimal
 
 class Customer(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
@@ -22,9 +23,17 @@ class Book(models.Model):
     stock = models.PositiveIntegerField()
     description = models.TextField(blank=True, null=True)
     isbn = models.CharField(max_length=13, blank=True, null=True)
+    cover_image = models.ImageField(upload_to='book_covers/', blank=True, null=True)
 
     def __str__(self):
         return self.title
+    
+    @property
+    def get_cover_image_url(self):
+        """Return cover image URL or placeholder"""
+        if self.cover_image:
+            return self.cover_image.url
+        return '/static/images/no-cover.png'
 
 
 class Order(models.Model):
@@ -44,15 +53,23 @@ class Order(models.Model):
     delivery_name = models.CharField(max_length=100, default='N/A')
     delivery_phone = models.CharField(max_length=15, default='N/A')
     delivery_address = models.TextField(default='N/A')
-    delivery_notes = models.TextField(blank=True, null=True)  # Optional special instructions
+    delivery_notes = models.TextField(blank=True, null=True)
+    
+    # Shipping fee
+    shipping_fee = models.DecimalField(max_digits=8, decimal_places=2, default=0.00)
 
     def __str__(self):
         return f"Order #{self.id} - {self.customer.user.username}"
     
     @property
-    def total_amount(self):
-        """Auto calculate order total"""
+    def subtotal(self):
+        """Calculate subtotal (items only, without shipping)"""
         return sum(item.subtotal for item in self.orderitem_set.all())
+    
+    @property
+    def total_amount(self):
+        """Calculate total amount including shipping"""
+        return self.subtotal + self.shipping_fee
 
     class Meta:
         ordering = ['-order_date']
@@ -87,8 +104,6 @@ class Payment(models.Model):
     PAYMENT_METHODS = [
         ('Cash', 'Cash on Delivery'),
         ('Card', 'Credit/Debit Card'),
-        ('UPI', 'UPI'),
-        ('Wallet', 'E-Wallet'),
     ]
     
     PAYMENT_STATUS = [
@@ -108,6 +123,7 @@ class Payment(models.Model):
     def __str__(self):
         return f"Payment for Order #{self.order.id} - {self.status}"
 
+
 class Cart(models.Model):
     customer = models.OneToOneField(Customer, on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -117,14 +133,48 @@ class Cart(models.Model):
         return f"Cart - {self.customer.user.username}"
     
     @property
-    def total_amount(self):
-        """Calculate total cart value"""
+    def subtotal(self):
+        """Calculate cart subtotal (items only)"""
         return sum(item.subtotal for item in self.cartitem_set.all())
+    
+    @property
+    def shipping_fee(self):
+        """Calculate shipping fee based on cart"""
+        return self.calculate_shipping()
+    
+    @property
+    def total_amount(self):
+        """Calculate total including shipping"""
+        return self.subtotal + self.shipping_fee
     
     @property
     def total_items(self):
         """Count total items in cart"""
         return sum(item.quantity for item in self.cartitem_set.all())
+    
+    def calculate_shipping(self):
+        """
+        Shipping calculation logic:
+        - Free shipping for orders above Rs. 1000
+        - Rs. 50 for orders below Rs. 5000
+        - Rs. 10 per book if more than 5 books
+        """
+        subtotal = self.subtotal
+        total_items = self.total_items
+        
+        # Free shipping for orders above Rs. 5000
+        if subtotal >= 5000:
+            return Decimal('0.00')
+        
+        # Base shipping fee
+        base_fee = Decimal('50.00')
+        
+        # Additional fee for more than 5 books
+        if total_items > 5:
+            additional_fee = (total_items - 5) * Decimal('10.00')
+            return base_fee + additional_fee
+        
+        return base_fee
 
 
 class CartItem(models.Model):
@@ -134,7 +184,7 @@ class CartItem(models.Model):
     added_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        unique_together = ('cart', 'book')  # Prevent duplicate books in same cart
+        unique_together = ('cart', 'book')
 
     def __str__(self):
         return f"{self.book.title} x {self.quantity}"
@@ -143,7 +193,6 @@ class CartItem(models.Model):
     def subtotal(self):
         """Calculate subtotal for this item"""
         return self.book.price * self.quantity
-
 
 
 @receiver(post_save, sender=Payment)

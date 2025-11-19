@@ -207,13 +207,17 @@ def checkout(request):
         delivery_address = request.POST.get('delivery_address')
         delivery_notes = request.POST.get('delivery_notes', '')
         
-        # Create Order with delivery info
+        # Calculate shipping fee
+        shipping_fee = cart.shipping_fee
+        
+        # Create Order with delivery info and shipping fee
         order = Order.objects.create(
             customer=customer,
             delivery_name=delivery_name,
             delivery_phone=delivery_phone,
             delivery_address=delivery_address,
-            delivery_notes=delivery_notes
+            delivery_notes=delivery_notes,
+            shipping_fee=shipping_fee  # Save shipping fee
         )
         
         # Create Order Items from Cart Items
@@ -226,12 +230,12 @@ def checkout(request):
                 subtotal=cart_item.subtotal
             )
         
-        # Create Payment
+        # Create Payment (total now includes shipping)
         Payment.objects.create(
             order=order,
-            amount=order.total_amount,
+            amount=order.total_amount,  # This now includes shipping
             method=payment_method,
-            status='Paid'  # For now, assume payment is successful
+            status='Paid'
         )
         
         # Clear the cart
@@ -243,7 +247,7 @@ def checkout(request):
     context = {
         'cart': cart,
         'cart_items': cart_items,
-        'customer': customer,  # Pass customer for pre-filling form
+        'customer': customer,
     }
     return render(request, 'bookstore/checkout.html', context)
 
