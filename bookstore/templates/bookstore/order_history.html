@@ -263,6 +263,60 @@
             font-size: 1.05rem;
         }
 
+        .pricing-summary {
+            background: linear-gradient(135deg, #f0f4ff 0%, #f3f0ff 100%);
+            padding: 1.5rem;
+            border-radius: 15px;
+            border-left: 4px solid #667eea;
+        }
+
+        .pricing-summary h4 {
+            color: #1f2937;
+            margin-bottom: 1rem;
+            font-size: 1.1rem;
+        }
+
+        .price-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.6rem 0;
+            color: #4b5563;
+            border-bottom: 1px solid rgba(102, 126, 234, 0.2);
+        }
+
+        .price-row:last-child {
+            border-bottom: none;
+        }
+
+        .price-row.discount {
+            color: #10b981;
+            font-weight: 600;
+        }
+
+        .price-row.total {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: #1f2937;
+            margin-top: 0.8rem;
+            padding-top: 0.8rem;
+            border-top: 2px solid rgba(102, 126, 234, 0.3);
+        }
+
+        .price-row.total .amount {
+            color: #667eea;
+        }
+
+        .discount-badge {
+            background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+            color: #065f46;
+            padding: 0.8rem 1.2rem;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            display: inline-block;
+            margin-top: 1rem;
+        }
+
         .order-footer {
             margin-top: 1.5rem;
             padding-top: 1.5rem;
@@ -419,20 +473,69 @@
                             {% endif %}
                         </div>
 
-                        <div class="order-items">
-                            <h4>📚 Items Ordered</h4>
-                            <ul>
-                                {% for item in order.orderitem_set.all %}
-                                    <li>
-                                        <div class="item-details">
-                                            <span class="item-name">{{ item.book.title }}</span>
-                                            <span class="item-quantity">× {{ item.quantity }}</span>
-                                        </div>
-                                        <span class="item-price">Rs. {{ item.subtotal }}</span>
-                                    </li>
-                                {% endfor %}
-                            </ul>
+                        <div class="pricing-summary">
+                            <h4>💰 Pricing Details</h4>
+                            <div class="price-row">
+                                <span>Subtotal</span>
+                                <span>Rs. {{ order.subtotal|floatformat:2 }}</span>
+                            </div>
+
+                            {% if order.coupon_discount > 0 %}
+                            <div class="price-row discount">
+                                <span>🎟️ Coupon ({{ order.discount_code_used }})</span>
+                                <span>-Rs. {{ order.coupon_discount|floatformat:2 }}</span>
+                            </div>
+                            {% endif %}
+
+                            {% if order.order_value_discount > 0 %}
+                            <div class="price-row discount">
+                                <span>📦 Order Value Discount</span>
+                                <span>-Rs. {{ order.order_value_discount|floatformat:2 }}</span>
+                            </div>
+                            {% endif %}
+
+                            {% if order.first_time_discount > 0 %}
+                            <div class="price-row discount">
+                                <span>⭐ First-Time Buyer</span>
+                                <span>-Rs. {{ order.first_time_discount|floatformat:2 }}</span>
+                            </div>
+                            {% endif %}
+
+                            <div class="price-row">
+                                <span>Shipping</span>
+                                {% if order.shipping_fee == 0 %}
+                                    <span style="color: #10b981; font-weight: 600;">FREE ✓</span>
+                                {% else %}
+                                    <span>Rs. {{ order.shipping_fee|floatformat:2 }}</span>
+                                {% endif %}
+                            </div>
+
+                            <div class="price-row total">
+                                <span>Total</span>
+                                <span class="amount">Rs. {{ order.total_amount|floatformat:2 }}</span>
+                            </div>
+
+                            {% if order.total_discount > 0 %}
+                            <div class="discount-badge">
+                                ✓ Saved Rs. {{ order.total_discount|floatformat:2 }}
+                            </div>
+                            {% endif %}
                         </div>
+                    </div>
+
+                    <div class="order-items">
+                        <h4>📚 Items Ordered</h4>
+                        <ul>
+                            {% for item in order.orderitem_set.all %}
+                                <li>
+                                    <div class="item-details">
+                                        <span class="item-name">{{ item.book.title }}</span>
+                                        <span class="item-quantity">× {{ item.quantity }}</span>
+                                    </div>
+                                    <span class="item-price">Rs. {{ item.subtotal }}</span>
+                                </li>
+                            {% endfor %}
+                        </ul>
                     </div>
 
                     <div class="order-footer">

@@ -3,8 +3,10 @@ from django.contrib.auth import login, logout, authenticate
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.contrib import messages
-from .models import Book, Order, OrderItem, Customer, Payment, Cart, CartItem
+from .models import Book, Order, OrderItem, Customer, Payment, Cart, CartItem, Coupon, CouponUsage
 from decimal import Decimal
+import json
+from django.http import JsonResponse
 
 # Authentication Views
 def register(request):
@@ -31,9 +33,9 @@ def register(request):
         
         # Create User and Customer
         user = User.objects.create_user(username=username, email=email, password=password)
-        Customer.objects.create(user=user, phone=phone, address=address)
+        customer = Customer.objects.create(user=user, phone=phone, address=address, is_first_time_buyer=True)
         
-        Cart.objects.create(customer=Customer.objects.get(user=user))
+        Cart.objects.create(customer=customer)
         messages.success(request, 'Account created successfully! Please login.')
         return redirect('login')
     
@@ -64,7 +66,7 @@ def logout_view(request):
     return redirect('home')
 
 
-# Existing views - Updated with authentication
+# Main Pages
 def home_page(request):
     return render(request, 'bookstore/home.html')
 
@@ -80,14 +82,8 @@ def book_detail(request, book_id):
 
 
 @login_required(login_url='login')
-def place_order(request, book_id):
-    # Redirect to add to cart instead
-    return redirect('add_to_cart', book_id=book_id)
-
-
-@login_required(login_url='login')
 def order_history(request):
-    customer = request.user.customer  # Get current logged-in customer
+    customer = request.user.customer
     orders = Order.objects.filter(customer=customer)
     return render(request, 'bookstore/order_history.html', {'orders': orders})
 
@@ -104,30 +100,22 @@ def contact(request):
         subject = request.POST.get('subject')
         message = request.POST.get('message')
         
-        # Save to database or send email
-        # Contact.objects.create(name=name, email=email, ...)
-        
         messages.success(request, 'Thank you! Your message has been sent.')
         return redirect('contact')
     
     return render(request, 'bookstore/contact.html')
 
 
-from .models import Book, Order, OrderItem, Customer, Payment, Cart, CartItem
-
+# Cart Management
 @login_required(login_url='login')
 def add_to_cart(request, book_id):
     book = get_object_or_404(Book, id=book_id)
     customer = request.user.customer
     
-    # Get or create cart for customer
     cart, created = Cart.objects.get_or_create(customer=customer)
-    
-    # Check if book already in cart
     cart_item, created = CartItem.objects.get_or_create(cart=cart, book=book)
     
     if not created:
-        # Book already in cart, increase quantity
         if cart_item.quantity < book.stock:
             cart_item.quantity += 1
             cart_item.save()
@@ -151,6 +139,64 @@ def view_cart(request):
         'cart_items': cart_items,
     }
     return render(request, 'bookstore/cart.html', context)
+
+
+@login_required(login_url='login')
+def apply_coupon(request):
+    if request.method == 'POST':
+        coupon_code = request.POST.get('coupon_code', '').strip().upper()
+        customer = request.user.customer
+        cart = get_object_or_404(Cart, customer=customer)
+        
+        if not coupon_code:
+            messages.error(request, 'Please enter a coupon code!')
+            return redirect('view_cart')
+        
+        try:
+            coupon = Coupon.objects.get(code=coupon_code)
+        except Coupon.DoesNotExist:
+            messages.error(request, 'Invalid coupon code!')
+            return redirect('view_cart')
+        
+        # Validate coupon
+        is_valid, msg = coupon.is_valid()
+        if not is_valid:
+            messages.error(f"Coupon error: {msg}")
+            return redirect('view_cart')
+        
+        # Check minimum purchase
+        if cart.subtotal < coupon.min_purchase:
+            messages.error(request, f'Minimum purchase of Rs. {coupon.min_purchase} required for this coupon!')
+            return redirect('view_cart')
+        
+        # Apply coupon
+        cart.applied_coupon = coupon
+        cart.save()
+        
+        discount_amount = coupon.calculate_discount(cart.subtotal)
+        messages.success(request, f'Coupon "{coupon_code}" applied! You saved Rs. {discount_amount:.2f}')
+        return redirect('view_cart')
+    
+    return redirect('view_cart')
+
+
+@login_required(login_url='login')
+def remove_coupon(request):
+    if request.method == 'POST':
+        customer = request.user.customer
+        cart = get_object_or_404(Cart, customer=customer)
+        
+        if cart.applied_coupon:
+            coupon_code = cart.applied_coupon.code
+            cart.applied_coupon = None
+            cart.save()
+            messages.success(request, f'Coupon "{coupon_code}" removed!')
+        else:
+            messages.warning(request, 'No coupon applied!')
+        
+        return redirect('view_cart')
+    
+    return redirect('view_cart')
 
 
 @login_required(login_url='login')
@@ -188,6 +234,7 @@ def remove_from_cart(request, item_id):
     return redirect('view_cart')
 
 
+# Checkout and Order Processing
 @login_required(login_url='login')
 def checkout(request):
     customer = request.user.customer
@@ -200,27 +247,27 @@ def checkout(request):
     
     if request.method == 'POST':
         payment_method = request.POST.get('payment_method', 'Cash')
-        
-        # Get delivery information from form
         delivery_name = request.POST.get('delivery_name')
         delivery_phone = request.POST.get('delivery_phone')
         delivery_address = request.POST.get('delivery_address')
         delivery_notes = request.POST.get('delivery_notes', '')
         
-        # Calculate shipping fee
-        shipping_fee = cart.shipping_fee
-        
-        # Create Order with delivery info and shipping fee
+        # Create Order
         order = Order.objects.create(
             customer=customer,
             delivery_name=delivery_name,
             delivery_phone=delivery_phone,
             delivery_address=delivery_address,
             delivery_notes=delivery_notes,
-            shipping_fee=shipping_fee  # Save shipping fee
+            shipping_fee=cart.shipping_fee,
+            applied_coupon=cart.applied_coupon,
+            coupon_discount=cart.coupon_discount,
+            order_value_discount=cart.order_value_discount,
+            first_time_discount=cart.first_time_discount,
+            discount_code_used=cart.applied_coupon.code if cart.applied_coupon else None
         )
         
-        # Create Order Items from Cart Items
+        # Create Order Items
         for cart_item in cart_items:
             OrderItem.objects.create(
                 order=order,
@@ -230,18 +277,37 @@ def checkout(request):
                 subtotal=cart_item.subtotal
             )
         
-        # Create Payment (total now includes shipping)
+        # Update Coupon Usage
+        if cart.applied_coupon:
+            coupon = cart.applied_coupon
+            coupon.current_usage += 1
+            coupon.save()
+            
+            CouponUsage.objects.create(
+                coupon=coupon,
+                customer=customer,
+                order=order
+            )
+        
+        # Update First-Time Buyer Status
+        if customer.is_first_time_buyer:
+            customer.is_first_time_buyer = False
+            customer.save()
+        
+        # Create Payment
         Payment.objects.create(
             order=order,
-            amount=order.total_amount,  # This now includes shipping
+            amount=order.total_amount,
             method=payment_method,
             status='Paid'
         )
         
-        # Clear the cart
+        # Clear Cart
         cart_items.delete()
+        cart.applied_coupon = None
+        cart.save()
         
-        messages.success(request, f'Order #{order.id} placed successfully!')
+        messages.success(request, f'Order #{order.id} placed successfully! You saved Rs. {order.total_discount:.2f}')
         return redirect('order_history')
     
     context = {
@@ -257,16 +323,13 @@ def edit_profile(request):
     customer = request.user.customer
     
     if request.method == 'POST':
-        # Get form data
         email = request.POST.get('email')
         phone = request.POST.get('phone')
         address = request.POST.get('address')
         
-        # Update User email
         request.user.email = email
         request.user.save()
         
-        # Update Customer details
         customer.phone = phone
         customer.address = address
         customer.save()

@@ -4,12 +4,14 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.core.exceptions import ValidationError
 from decimal import Decimal
+from datetime import datetime
 
 class Customer(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     phone = models.CharField(max_length=15)
     address = models.TextField()
     registration_date = models.DateTimeField(auto_now_add=True)
+    is_first_time_buyer = models.BooleanField(default=True)
 
     def __str__(self):
         return self.user.username
@@ -36,6 +38,59 @@ class Book(models.Model):
         return '/static/images/no-cover.png'
 
 
+class Coupon(models.Model):
+    DISCOUNT_TYPE_CHOICES = [
+        ('fixed', 'Fixed Amount'),
+        ('percentage', 'Percentage'),
+    ]
+    
+    code = models.CharField(max_length=50, unique=True)
+    discount_type = models.CharField(max_length=20, choices=DISCOUNT_TYPE_CHOICES)
+    discount_value = models.DecimalField(max_digits=8, decimal_places=2)
+    max_usage = models.PositiveIntegerField(default=100)
+    current_usage = models.PositiveIntegerField(default=0)
+    min_purchase = models.DecimalField(max_digits=8, decimal_places=2, default=0.00)
+    expiry_date = models.DateTimeField()
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.code} - {self.get_discount_type_display()}"
+    
+    def is_valid(self):
+        """Check if coupon is valid and can be used"""
+        if not self.is_active:
+            return False, "This coupon is inactive"
+        
+        if self.current_usage >= self.max_usage:
+            return False, "Coupon usage limit reached"
+        
+        if datetime.now() > self.expiry_date.replace(tzinfo=None):
+            return False, "This coupon has expired"
+        
+        return True, "Valid"
+    
+    def calculate_discount(self, amount):
+        """Calculate discount based on discount type"""
+        if self.discount_type == 'fixed':
+            return min(self.discount_value, amount)
+        else:  # percentage
+            return (amount * self.discount_value) / 100
+
+
+class CouponUsage(models.Model):
+    coupon = models.ForeignKey(Coupon, on_delete=models.CASCADE)
+    customer = models.ForeignKey(Customer, on_delete=models.CASCADE)
+    order = models.ForeignKey('Order', on_delete=models.CASCADE)
+    used_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('coupon', 'order')
+
+    def __str__(self):
+        return f"{self.coupon.code} - Order #{self.order.id}"
+
+
 class Order(models.Model):
     STATUS_CHOICES = [
         ('Pending', 'Pending'),
@@ -55,8 +110,13 @@ class Order(models.Model):
     delivery_address = models.TextField(default='N/A')
     delivery_notes = models.TextField(blank=True, null=True)
     
-    # Shipping fee
+    # Shipping and Discount
     shipping_fee = models.DecimalField(max_digits=8, decimal_places=2, default=0.00)
+    applied_coupon = models.ForeignKey(Coupon, on_delete=models.SET_NULL, null=True, blank=True)
+    coupon_discount = models.DecimalField(max_digits=8, decimal_places=2, default=0.00)
+    order_value_discount = models.DecimalField(max_digits=8, decimal_places=2, default=0.00)
+    first_time_discount = models.DecimalField(max_digits=8, decimal_places=2, default=0.00)
+    discount_code_used = models.CharField(max_length=50, blank=True, null=True)
 
     def __str__(self):
         return f"Order #{self.id} - {self.customer.user.username}"
@@ -67,9 +127,14 @@ class Order(models.Model):
         return sum(item.subtotal for item in self.orderitem_set.all())
     
     @property
+    def total_discount(self):
+        """Calculate total discount applied"""
+        return self.coupon_discount + self.order_value_discount + self.first_time_discount
+    
+    @property
     def total_amount(self):
-        """Calculate total amount including shipping"""
-        return self.subtotal + self.shipping_fee
+        """Calculate total amount including shipping and after discounts"""
+        return self.subtotal - self.total_discount + self.shipping_fee
 
     class Meta:
         ordering = ['-order_date']
@@ -126,6 +191,7 @@ class Payment(models.Model):
 
 class Cart(models.Model):
     customer = models.OneToOneField(Customer, on_delete=models.CASCADE)
+    applied_coupon = models.ForeignKey(Coupon, on_delete=models.SET_NULL, null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -143,9 +209,42 @@ class Cart(models.Model):
         return self.calculate_shipping()
     
     @property
+    def coupon_discount(self):
+        """Calculate coupon discount if applied"""
+        if self.applied_coupon:
+            is_valid, msg = self.applied_coupon.is_valid()
+            if is_valid and self.subtotal >= self.applied_coupon.min_purchase:
+                return self.applied_coupon.calculate_discount(self.subtotal)
+        return Decimal('0.00')
+    
+    @property
+    def order_value_discount(self):
+        """Calculate auto discount based on order value"""
+        subtotal = self.subtotal
+        if subtotal >= 5000:
+            return subtotal * Decimal('0.15')
+        elif subtotal >= 2000:
+            return subtotal * Decimal('0.10')
+        elif subtotal >= 1000:
+            return subtotal * Decimal('0.05')
+        return Decimal('0.00')
+    
+    @property
+    def first_time_discount(self):
+        """Calculate first-time buyer discount (15%)"""
+        if self.customer.is_first_time_buyer:
+            return self.subtotal * Decimal('0.15')
+        return Decimal('0.00')
+    
+    @property
+    def total_discount(self):
+        """Calculate total discount"""
+        return self.coupon_discount + self.order_value_discount + self.first_time_discount
+    
+    @property
     def total_amount(self):
-        """Calculate total including shipping"""
-        return self.subtotal + self.shipping_fee
+        """Calculate total including shipping and after discounts"""
+        return self.subtotal - self.total_discount + self.shipping_fee
     
     @property
     def total_items(self):
@@ -155,7 +254,7 @@ class Cart(models.Model):
     def calculate_shipping(self):
         """
         Shipping calculation logic:
-        - Free shipping for orders above Rs. 1000
+        - Free shipping for orders above Rs. 5000
         - Rs. 50 for orders below Rs. 5000
         - Rs. 10 per book if more than 5 books
         """

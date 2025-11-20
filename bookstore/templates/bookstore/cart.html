@@ -189,14 +189,12 @@
             border-radius: 10px;
             overflow: hidden;
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-            position: relative;
         }
 
         .item-image img {
             width: 100%;
             height: 100%;
             object-fit: contain;
-            object-position: center;
             background: #f3f4f6;
         }
 
@@ -210,7 +208,6 @@
             font-size: 1.2rem;
             font-weight: 600;
             color: #1f2937;
-            margin-bottom: 0.3rem;
         }
 
         .item-author {
@@ -223,12 +220,6 @@
             font-weight: 600;
             font-size: 1.1rem;
             margin-top: 0.5rem;
-        }
-
-        .item-stock {
-            color: #10b981;
-            font-size: 0.85rem;
-            margin-top: 0.3rem;
         }
 
         .item-actions {
@@ -266,7 +257,6 @@
         .qty-btn:hover {
             background: #667eea;
             color: white;
-            transform: scale(1.1);
         }
 
         .quantity {
@@ -296,7 +286,6 @@
             font-size: 1.3rem;
             font-weight: 700;
             color: #1f2937;
-            margin-top: 0.5rem;
         }
 
         .cart-summary {
@@ -318,11 +307,91 @@
             border-bottom: 2px solid #e5e7eb;
         }
 
+        .coupon-section {
+            margin-bottom: 2rem;
+            padding-bottom: 1.5rem;
+            border-bottom: 2px solid #e5e7eb;
+        }
+
+        .coupon-section h4 {
+            color: #374151;
+            font-size: 0.95rem;
+            margin-bottom: 0.8rem;
+            font-weight: 600;
+        }
+
+        .coupon-input-group {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 0.8rem;
+        }
+
+        .coupon-input {
+            flex: 1;
+            padding: 0.7rem;
+            border: 2px solid #e5e7eb;
+            border-radius: 10px;
+            font-size: 0.9rem;
+            transition: all 0.3s;
+        }
+
+        .coupon-input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .btn-small {
+            padding: 0.7rem 1.2rem;
+            font-size: 0.9rem;
+        }
+
+        .applied-coupon {
+            background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+            padding: 1rem;
+            border-radius: 12px;
+            margin-bottom: 0.8rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .applied-coupon-text {
+            color: #065f46;
+            font-weight: 600;
+            font-size: 0.95rem;
+        }
+
+        .remove-coupon-btn {
+            background: none;
+            border: none;
+            color: #065f46;
+            cursor: pointer;
+            font-weight: 600;
+            text-decoration: underline;
+        }
+
+        .discount-badge {
+            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+            color: #92400e;
+            padding: 0.6rem 1rem;
+            border-radius: 50px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            display: inline-block;
+            margin-top: 0.8rem;
+        }
+
         .summary-row {
             display: flex;
             justify-content: space-between;
             padding: 0.8rem 0;
             color: #4b5563;
+        }
+
+        .summary-row.discount {
+            color: #10b981;
+            font-weight: 600;
         }
 
         .summary-row.total {
@@ -336,6 +405,16 @@
 
         .summary-row.total .amount {
             color: #667eea;
+        }
+
+        .discount-info {
+            background: #f0f4ff;
+            border-left: 4px solid #667eea;
+            padding: 0.8rem;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            color: #4338ca;
+            margin-top: 0.8rem;
         }
 
         .checkout-btn {
@@ -352,11 +431,6 @@
             text-decoration: none;
             margin-top: 1rem;
             font-weight: 600;
-            transition: all 0.3s;
-        }
-
-        .continue-shopping:hover {
-            color: #764ba2;
         }
 
         footer {
@@ -376,23 +450,6 @@
             .cart-summary {
                 position: static;
             }
-
-            .cart-item {
-                grid-template-columns: 100px 1fr;
-                gap: 1rem;
-            }
-
-            .item-image {
-                width: 100px;
-                height: 140px;
-            }
-
-            .item-actions {
-                grid-column: 1 / -1;
-                flex-direction: row;
-                justify-content: space-between;
-                align-items: center;
-            }
         }
 
         @media (max-width: 576px) {
@@ -402,11 +459,11 @@
 
             .cart-item {
                 grid-template-columns: 1fr;
-                text-align: center;
             }
 
-            .item-image {
-                margin: 0 auto;
+            .item-actions {
+                flex-direction: row;
+                justify-content: space-between;
             }
         }
     </style>
@@ -448,7 +505,6 @@
                         <div class="item-title">{{ item.book.title }}</div>
                         <div class="item-author">by {{ item.book.author }}</div>
                         <div class="item-price">Rs. {{ item.book.price }}</div>
-                        <div class="item-stock">{{ item.book.stock }} in stock</div>
                     </div>
                     
                     <div class="item-actions">
@@ -470,7 +526,7 @@
                         
                         <form method="POST" action="{% url 'remove_from_cart' item.id %}" style="display: inline;">
                             {% csrf_token %}
-                            <button type="submit" class="remove-btn" onclick="return confirm('Remove this item from cart?')">🗑️ Remove</button>
+                            <button type="submit" class="remove-btn">🗑️ Remove</button>
                         </form>
                         
                         <div class="item-subtotal">Rs. {{ item.subtotal }}</div>
@@ -482,10 +538,54 @@
             <div class="cart-summary">
                 <h3 class="summary-title">Order Summary</h3>
                 
-                <div class="summary-row">
-                    <span>Items ({{ cart.total_items }})</span>
-                    <span class="amount">Rs. {{ cart.subtotal }}</span>
+                <!-- Coupon Section -->
+                <div class="coupon-section">
+                    {% if cart.applied_coupon %}
+                        <div class="applied-coupon">
+                            <span class="applied-coupon-text">✓ Coupon "{{ cart.applied_coupon.code }}" Applied</span>
+                            <form method="POST" action="{% url 'remove_coupon' %}" style="display: inline;">
+                                {% csrf_token %}
+                                <button type="submit" class="remove-coupon-btn">Remove</button>
+                            </form>
+                        </div>
+                    {% else %}
+                        <h4>🎟️ Coupon Code</h4>
+                        <form method="POST" action="{% url 'apply_coupon' %}">
+                            {% csrf_token %}
+                            <div class="coupon-input-group">
+                                <input type="text" name="coupon_code" class="coupon-input" placeholder="Enter code" required>
+                                <button type="submit" class="btn btn-small">Apply</button>
+                            </div>
+                        </form>
+                    {% endif %}
                 </div>
+                
+                <!-- Discounts Display -->
+                <div class="summary-row">
+                    <span>Subtotal</span>
+                    <span class="amount">Rs. {{ cart.subtotal|floatformat:2 }}</span>
+                </div>
+
+                {% if cart.coupon_discount > 0 %}
+                <div class="summary-row discount">
+                    <span>🎟️ Coupon Discount</span>
+                    <span>-Rs. {{ cart.coupon_discount|floatformat:2 }}</span>
+                </div>
+                {% endif %}
+
+                {% if cart.order_value_discount > 0 %}
+                <div class="summary-row discount">
+                    <span>📦 Order Value Discount</span>
+                    <span>-Rs. {{ cart.order_value_discount|floatformat:2 }}</span>
+                </div>
+                {% endif %}
+
+                {% if cart.first_time_discount > 0 %}
+                <div class="summary-row discount">
+                    <span>⭐ First-Time Buyer Discount</span>
+                    <span>-Rs. {{ cart.first_time_discount|floatformat:2 }}</span>
+                </div>
+                {% endif %}
                 
                 <div class="summary-row">
                     <span>Shipping</span>
@@ -498,12 +598,18 @@
                 
                 <div class="summary-row total">
                     <span>Total</span>
-                    <span class="amount">Rs. {{ cart.total_amount }}</span>
+                    <span class="amount">Rs. {{ cart.total_amount|floatformat:2 }}</span>
                 </div>
+
+                {% if cart.total_discount > 0 %}
+                <div class="discount-info">
+                    💰 Total Savings: Rs. {{ cart.total_discount|floatformat:2 }}
+                </div>
+                {% endif %}
                 
-                {% if cart.subtotal < 1000 and cart.subtotal > 0 %}
-                <div style="background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); color: #92400e; padding: 1rem; border-radius: 12px; text-align: center; font-size: 0.9rem; margin-top: 1rem; border-left: 4px solid #f59e0b;">
-                    💡 <strong>Tip:</strong> Add Rs. {{ 1000|add:"-"|add:cart.subtotal }} more to get FREE shipping!
+                {% if cart.subtotal < 5000 and cart.subtotal > 0 %}
+                <div class="discount-badge">
+                    💡 Spend Rs. {{ 5000|add:"-"|add:cart.subtotal|floatformat:0 }} more for FREE shipping!
                 </div>
                 {% endif %}
                 
