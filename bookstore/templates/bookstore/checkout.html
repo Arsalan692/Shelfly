@@ -1,3 +1,4 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -63,6 +64,22 @@
             padding: 0 2rem 4rem 2rem;
             position: relative;
             z-index: 10;
+        }
+
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 600;
+            margin-bottom: 2rem;
+            transition: all 0.3s;
+        }
+
+        .back-link:hover {
+            color: #764ba2;
+            gap: 0.8rem;
         }
 
         .checkout-wrapper {
@@ -265,62 +282,76 @@
             border-bottom: 2px solid #e5e7eb;
         }
 
-        .order-items {
-            max-height: 300px;
+        .order-items-summary {
+            max-height: 350px;
             overflow-y: auto;
             margin-bottom: 1.5rem;
             padding-right: 0.5rem;
         }
 
-        .order-items::-webkit-scrollbar {
+        .order-items-summary::-webkit-scrollbar {
             width: 6px;
         }
 
-        .order-items::-webkit-scrollbar-track {
+        .order-items-summary::-webkit-scrollbar-track {
             background: #f3f4f6;
             border-radius: 10px;
         }
 
-        .order-items::-webkit-scrollbar-thumb {
+        .order-items-summary::-webkit-scrollbar-thumb {
             background: #667eea;
             border-radius: 10px;
         }
 
-        .order-item {
+        .order-item-summary {
             display: flex;
             gap: 1rem;
             padding: 1rem 0;
             border-bottom: 1px solid #f3f4f6;
         }
 
-        .order-item:last-child {
+        .order-item-summary:last-child {
             border-bottom: none;
         }
 
-        .item-icon {
-            font-size: 2rem;
+        .item-image-summary {
+            width: 70px;
+            height: 100px;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            flex-shrink: 0;
         }
 
-        .item-info {
+        .item-image-summary img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            background: #f3f4f6;
+        }
+
+        .item-info-summary {
             flex: 1;
         }
 
-        .item-name {
+        .item-name-summary {
             font-weight: 600;
             color: #1f2937;
             font-size: 0.95rem;
             margin-bottom: 0.3rem;
+            line-height: 1.3;
         }
 
-        .item-qty-price {
+        .item-qty-price-summary {
             color: #6b7280;
             font-size: 0.85rem;
         }
 
-        .item-total {
+        .item-total-summary {
             font-weight: 700;
             color: #667eea;
             align-self: center;
+            white-space: nowrap;
         }
 
         .summary-row {
@@ -391,22 +422,6 @@
             font-weight: 600;
         }
 
-        .back-link {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-            color: #667eea;
-            text-decoration: none;
-            font-weight: 600;
-            margin-bottom: 2rem;
-            transition: all 0.3s;
-        }
-
-        .back-link:hover {
-            color: #764ba2;
-            gap: 0.8rem;
-        }
-
         footer {
             background-color: #1f2937;
             color: #9ca3af;
@@ -435,6 +450,11 @@
             .checkout-section,
             .order-summary {
                 padding: 1.5rem;
+            }
+
+            .item-image-summary {
+                width: 50px;
+                height: 75px;
             }
         }
     </style>
@@ -526,15 +546,21 @@
             <div class="order-summary">
                 <h3 class="summary-title">Order Summary</h3>
                 
-                <div class="order-items">
+                <div class="order-items-summary">
                     {% for item in cart_items %}
-                    <div class="order-item">
-                        <div class="item-icon">📚</div>
-                        <div class="item-info">
-                            <div class="item-name">{{ item.book.title }}</div>
-                            <div class="item-qty-price">{{ item.quantity }} × Rs. {{ item.book.price }}</div>
+                    <div class="order-item-summary" style="display: flex; gap: 1rem; padding: 1rem 0; border-bottom: 1px solid #f3f4f6;">
+                        <div class="item-image-summary">
+                            {% if item.book.cover_image %}
+                                <img src="{{ item.book.cover_image.url }}" alt="{{ item.book.title }}">
+                            {% else %}
+                                <img src="{% static 'images/no-cover.png' %}" alt="{{ item.book.title }}">
+                            {% endif %}
                         </div>
-                        <div class="item-total">Rs. {{ item.subtotal }}</div>
+                        <div style="flex: 1; display: flex; flex-direction: column; justify-content: space-between;">
+                            <div class="item-name-summary">{{ item.book.title }}</div>
+                            <div class="item-qty-price-summary">{{ item.quantity }} × Rs. {{ item.book.price }}</div>
+                        </div>
+                        <div class="item-total-summary">Rs. {{ item.subtotal }}</div>
                     </div>
                     {% endfor %}
                 </div>
@@ -586,7 +612,7 @@
                 {% endif %}
 
                 <div class="secure-badge">
-                    🔒 Secure Checkout
+                    🔐 Secure Checkout
                 </div>
             </div>
         </div>

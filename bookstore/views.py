@@ -161,7 +161,7 @@ def apply_coupon(request):
         # Validate coupon
         is_valid, msg = coupon.is_valid()
         if not is_valid:
-            messages.error(f"Coupon error: {msg}")
+            messages.error(request, f"Coupon error: {msg}")
             return redirect('view_cart')
         
         # Check minimum purchase
