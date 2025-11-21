@@ -358,3 +358,49 @@ def edit_profile(request):
         return redirect('edit_profile')
     
     return render(request, 'bookstore/edit_profile.html', {'customer': customer})
+
+
+@login_required(login_url='login')
+def cancel_order(request, order_id):
+    """
+    Cancel an order if it's in a cancellable state (Pending or Confirmed)
+    and restore stock for all items
+    """
+    order = get_object_or_404(Order, id=order_id, customer=request.user.customer)
+    
+    # Check if order can be cancelled
+    cancellable_statuses = ['Pending', 'Confirmed']
+    if order.status not in cancellable_statuses:
+        messages.error(request, f"Cannot cancel order in '{order.status}' status!")
+        return redirect('order_history')
+    
+    if request.method == 'POST':
+        cancellation_reason = request.POST.get('cancellation_reason', '').strip()
+        
+        # Restore stock for all items in the order
+        for order_item in order.orderitem_set.all():
+            order_item.book.stock += order_item.quantity
+            order_item.book.save()
+        
+        # Revert coupon usage if coupon was applied
+        if order.applied_coupon:
+            order.applied_coupon.current_usage -= 1
+            order.applied_coupon.save()
+            
+            # Delete coupon usage record
+            CouponUsage.objects.filter(order=order).delete()
+        
+        # Update order status
+        order.status = 'Cancelled'
+        order.save()
+        
+        messages.success(
+            request, 
+            f'Order #{order.id} cancelled successfully! Stock has been restored.'
+        )
+        return redirect('order_history')
+    
+    context = {
+        'order': order,
+    }
+    return render(request, 'bookstore/cancel_order.html', context)

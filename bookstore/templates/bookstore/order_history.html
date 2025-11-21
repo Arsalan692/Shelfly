@@ -1,3 +1,4 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -105,6 +106,8 @@
             margin-bottom: 1.5rem;
             padding-bottom: 1rem;
             border-bottom: 2px solid #f3f4f6;
+            flex-wrap: wrap;
+            gap: 1rem;
         }
 
         .order-number {
@@ -124,6 +127,12 @@
             background: #f3f4f6;
             padding: 0.5rem 1rem;
             border-radius: 50px;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
         }
 
         .status {
@@ -163,6 +172,32 @@
             background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
             color: #991b1b;
             box-shadow: 0 3px 10px rgba(239, 68, 68, 0.3);
+        }
+
+        .btn-cancel {
+            padding: 0.5rem 1.2rem;
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            color: white;
+            border: none;
+            border-radius: 50px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 0.9rem;
+            text-decoration: none;
+            display: inline-block;
+            box-shadow: 0 3px 10px rgba(239, 68, 68, 0.2);
+        }
+
+        .btn-cancel:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(239, 68, 68, 0.3);
+        }
+
+        .btn-cancel:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
         }
 
         .order-content {
@@ -458,6 +493,17 @@
                 gap: 1rem;
             }
 
+            .header-actions {
+                flex-direction: column;
+                width: 100%;
+            }
+
+            .header-actions .status,
+            .header-actions .btn-cancel {
+                width: 100%;
+                text-align: center;
+            }
+
             .order-content {
                 grid-template-columns: 1fr;
             }
@@ -499,7 +545,14 @@
                             <strong>Order #{{ order.id }}</strong>
                             <span class="order-date">📅 {{ order.order_date|date:"M d, Y - h:i A" }}</span>
                         </div>
-                        <span class="status {{ order.status }}">{{ order.status }}</span>
+                        <div class="header-actions">
+                            <span class="status {{ order.status }}">{{ order.status }}</span>
+                            {% if order.status in "Pending,Confirmed" %}
+                                <a href="{% url 'cancel_order' order.id %}" class="btn-cancel">
+                                    🗑️ Cancel Order
+                                </a>
+                            {% endif %}
+                        </div>
                     </div>
 
                     <div class="order-content">

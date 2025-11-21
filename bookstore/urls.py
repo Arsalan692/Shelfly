@@ -28,4 +28,5 @@ urlpatterns = [
     # Order Management
     path('checkout/', views.checkout, name='checkout'),
     path('orders/', views.order_history, name='order_history'),
+    path('orders/<int:order_id>/cancel/', views.cancel_order, name='cancel_order'),
 ]
