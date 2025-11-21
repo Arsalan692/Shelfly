@@ -8,6 +8,7 @@ from decimal import Decimal
 import json
 from django.http import JsonResponse
 from django.db.models import Q
+from django.utils import timezone
 
 # Authentication Views
 def register(request):
@@ -399,8 +400,10 @@ def cancel_order(request, order_id):
             # Delete coupon usage record
             CouponUsage.objects.filter(order=order).delete()
         
-        # Update order status
+        # Update order status and save cancellation details
         order.status = 'Cancelled'
+        order.cancellation_reason = cancellation_reason if cancellation_reason else None
+        order.cancelled_at = timezone.now()
         order.save()
         
         messages.success(

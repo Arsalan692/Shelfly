@@ -110,9 +110,13 @@ class OrderAdmin(admin.ModelAdmin):
         ('Pricing & Discounts', {
             'fields': ('shipping_fee', 'applied_coupon', 'discount_code_used', 'coupon_discount', 'order_value_discount', 'first_time_discount')
         }),
+        ('Cancellation Details', {
+            'fields': ('cancellation_reason', 'cancelled_at'),
+            'classes': ('collapse',),  # Makes this section collapsible
+        }),
     )
     
-    readonly_fields = ('order_date', 'coupon_discount', 'order_value_discount', 'first_time_discount')
+    readonly_fields = ('order_date', 'coupon_discount', 'order_value_discount', 'first_time_discount', 'cancellation_reason', 'cancelled_at')
     
     def subtotal_display(self, obj):
         return f"Rs. {obj.subtotal}"
