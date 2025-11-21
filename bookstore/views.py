@@ -7,6 +7,7 @@ from .models import Book, Order, OrderItem, Customer, Payment, Cart, CartItem, C
 from decimal import Decimal
 import json
 from django.http import JsonResponse
+from django.db.models import Q
 
 # Authentication Views
 def register(request):
@@ -72,8 +73,27 @@ def home_page(request):
 
 
 def book_list(request):
+    # Get search query from GET parameters
+    search_query = request.GET.get('search', '').strip()
+    
+    # Start with all books
     books = Book.objects.all()
-    return render(request, 'bookstore/book_list.html', {'books': books})
+    
+    # Apply search filter if query exists
+    if search_query:
+        books = books.filter(
+            Q(title__icontains=search_query) |
+            Q(author__icontains=search_query) |
+            Q(category__icontains=search_query) |
+            Q(isbn__icontains=search_query)
+        )
+    
+    context = {
+        'books': books,
+        'search_query': search_query,
+    }
+    
+    return render(request, 'bookstore/book_list.html', context)
 
 
 def book_detail(request, book_id):

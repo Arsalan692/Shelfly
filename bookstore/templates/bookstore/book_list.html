@@ -23,7 +23,7 @@
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
             text-align: center;
-            padding: 4rem 2rem;
+            padding: 4rem 2rem 3rem 2rem;
             margin-bottom: 3rem;
         }
 
@@ -37,6 +37,7 @@
             font-size: 1.2rem;
             opacity: 0.95;
             animation: fadeInDown 1s ease;
+            margin-bottom: 2rem;
         }
 
         @keyframes fadeInDown {
@@ -50,10 +51,116 @@
             }
         }
 
+        .search-container {
+            max-width: 600px;
+            margin: 0 auto;
+            animation: fadeInUp 1.2s ease;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .search-form {
+            position: relative;
+            display: flex;
+            gap: 0.8rem;
+        }
+
+        .search-input {
+            flex: 1;
+            padding: 1rem 1.5rem;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50px;
+            font-size: 1rem;
+            background: rgba(255, 255, 255, 0.95);
+            color: #333;
+            transition: all 0.3s ease;
+            outline: none;
+        }
+
+        .search-input:focus {
+            background: white;
+            border-color: rgba(255, 255, 255, 0.8);
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
+            transform: translateY(-2px);
+        }
+
+        .search-input::placeholder {
+            color: #9ca3af;
+        }
+
+        .search-btn {
+            padding: 1rem 2.5rem;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 3px solid rgba(255, 255, 255, 0.4);
+            border-radius: 50px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+        }
+
+        .search-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            border-color: rgba(255, 255, 255, 0.6);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .clear-search {
+            padding: 1rem 2rem;
+            background: rgba(220, 38, 38, 0.15);
+            color: white;
+            border: 3px solid rgba(220, 38, 38, 0.3);
+            border-radius: 50px;
+            font-size: 1rem;
+            font-weight: 600;
+            text-decoration: none;
+            display: inline-block;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+        }
+
+        .clear-search:hover {
+            background: rgba(220, 38, 38, 0.25);
+            border-color: rgba(220, 38, 38, 0.5);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
         .container {
             max-width: 1200px;
             margin: 0 auto 4rem auto;
             padding: 0 2rem;
+        }
+
+        .search-info {
+            text-align: center;
+            margin-bottom: 2rem;
+            padding: 1.2rem;
+            background: linear-gradient(135deg, #e0e7ff 0%, #dbeafe 100%);
+            border-radius: 15px;
+            border-left: 5px solid #667eea;
+        }
+
+        .search-info p {
+            color: #1f2937;
+            font-size: 1.1rem;
+            font-weight: 500;
+        }
+
+        .search-info strong {
+            color: #667eea;
         }
 
         .book-grid {
@@ -289,6 +396,18 @@
                 font-size: 2rem;
             }
 
+            .page-header {
+                padding: 3rem 1.5rem 2.5rem 1.5rem;
+            }
+
+            .search-form {
+                flex-direction: column;
+            }
+
+            .search-btn, .clear-search {
+                width: 100%;
+            }
+
             .book-grid {
                 grid-template-columns: 1fr;
                 gap: 1.5rem;
@@ -311,9 +430,32 @@
     <section class="page-header">
         <h2>📖 Browse Our Collection</h2>
         <p>Discover amazing books across all genres</p>
+        
+        <div class="search-container">
+            <form method="GET" action="{% url 'book_list' %}" class="search-form">
+                <input 
+                    type="text" 
+                    name="search" 
+                    class="search-input" 
+                    placeholder="Search by title, author, category, or ISBN..." 
+                    value="{{ search_query }}"
+                    autocomplete="off"
+                >
+                <button type="submit" class="search-btn">🔍 Search</button>
+                {% if search_query %}
+                    <a href="{% url 'book_list' %}" class="clear-search">✖ Clear</a>
+                {% endif %}
+            </form>
+        </div>
     </section>
 
     <main class="container">
+        {% if search_query %}
+            <div class="search-info">
+                <p>Showing results for: <strong>"{{ search_query }}"</strong> | Found <strong>{{ books.count }}</strong> book(s)</p>
+            </div>
+        {% endif %}
+
         <div class="book-grid">
             {% for book in books %}
                 <div class="book-card">
@@ -352,9 +494,14 @@
                 </div>
             {% empty %}
                 <div class="no-books">
-                    <p style="font-size: 3rem; margin-bottom: 1rem;">📚</p>
-                    <p>No books available at the moment.</p>
-                    <p style="font-size: 0.9rem; margin-top: 1rem;">Check back soon for new arrivals!</p>
+                    <p style="font-size: 3rem; margin-bottom: 1rem;">🔍</p>
+                    {% if search_query %}
+                        <p>No books found matching "<strong>{{ search_query }}</strong>"</p>
+                        <p style="font-size: 0.9rem; margin-top: 1rem;">Try searching with different keywords or <a href="{% url 'book_list' %}" style="color: #667eea; text-decoration: underline;">view all books</a></p>
+                    {% else %}
+                        <p>No books available at the moment.</p>
+                        <p style="font-size: 0.9rem; margin-top: 1rem;">Check back soon for new arrivals!</p>
+                    {% endif %}
                 </div>
             {% endfor %}
         </div>
