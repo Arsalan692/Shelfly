@@ -1,5 +1,5 @@
 from django.shortcuts import render, get_object_or_404, redirect
-from django.contrib.auth import login, logout, authenticate
+from django.contrib.auth import login, logout, authenticate, update_session_auth_hash
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.contrib import messages
@@ -416,3 +416,39 @@ def cancel_order(request, order_id):
         'order': order,
     }
     return render(request, 'bookstore/cancel_order.html', context)
+
+@login_required(login_url='login')
+def change_password(request):
+    if request.method == 'POST':
+        current_password = request.POST.get('current_password')
+        new_password = request.POST.get('new_password')
+        confirm_password = request.POST.get('confirm_password')
+        
+        user = request.user
+        
+        # Validate current password
+        if not user.check_password(current_password):
+            messages.error(request, 'Current password is incorrect!')
+            return redirect('change_password')
+        
+        # Check if new passwords match
+        if new_password != confirm_password:
+            messages.error(request, 'New passwords do not match!')
+            return redirect('change_password')
+        
+        # Check password length
+        if len(new_password) < 8:
+            messages.error(request, 'Password must be at least 8 characters long!')
+            return redirect('change_password')
+        
+        # Update password
+        user.set_password(new_password)
+        user.save()
+        
+        # Keep user logged in after password change
+        update_session_auth_hash(request, user)
+        
+        messages.success(request, 'Password changed successfully!')
+        return redirect('edit_profile')
+    
+    return render(request, 'bookstore/change_password.html')

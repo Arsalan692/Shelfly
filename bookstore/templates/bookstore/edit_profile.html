@@ -264,6 +264,19 @@
                     <label for="address">Address *</label>
                     <textarea id="address" name="address" required>{{ customer.address }}</textarea>
                 </div>
+                
+                <div class="password-link" style="margin: 2rem 0; padding: 1.5rem; background: linear-gradient(135deg, #f0f4ff 0%, #f3f0ff 100%); border-radius: 12px; border-left: 4px solid #667eea;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+                        <div>
+                            <h4 style="color: #667eea; font-size: 1rem; margin-bottom: 0.3rem;">🔐 Password & Security</h4>
+                            <p style="color: #6b7280; font-size: 0.9rem;">Keep your account secure by updating your password regularly</p>
+                        </div>
+                        <a href="{% url 'change_password' %}" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 0.7rem 1.5rem; border-radius: 50px; text-decoration: none; font-weight: 600; font-size: 0.9rem; transition: all 0.3s; box-shadow: 0 3px 10px rgba(102, 126, 234, 0.3);">
+                            Change Password
+                        </a>
+                    </div>
+                </div>
+
 
                 <div class="btn-group">
                     <button type="submit" class="btn btn-primary">💾 Save Changes</button>
