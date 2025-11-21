@@ -361,9 +361,69 @@
             color: #4b5563;
         }
 
-        .summary-row.discount {
-            color: #10b981;
+        .summary-row.shipping {
+            padding-bottom: 1.2rem;
+            border-bottom: 2px solid #e5e7eb;
+            margin-bottom: 1rem;
+        }
+
+        /* Beautiful Discounts Section */
+        .discounts-section {
+            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+            border-radius: 15px;
+            padding: 1.2rem;
+            margin-bottom: 1rem;
+            border-left: 4px solid #f59e0b;
+            animation: slideIn 0.5s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .discounts-header {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+            color: #92400e;
+            font-weight: 700;
+            font-size: 1rem;
+        }
+
+        .discount-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.7rem 0;
+            color: #92400e;
             font-weight: 600;
+            border-bottom: 1px dashed rgba(146, 64, 14, 0.2);
+        }
+
+        .discount-item:last-child {
+            border-bottom: none;
+            padding-bottom: 0;
+        }
+
+        .discount-label {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.9rem;
+        }
+
+        .discount-amount {
+            color: #047857;
+            font-weight: 700;
+            font-size: 1rem;
         }
 
         .summary-row.total {
@@ -377,6 +437,32 @@
 
         .summary-row.total .amount {
             color: #667eea;
+        }
+
+        .total-savings-badge {
+            background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+            border-radius: 12px;
+            padding: 1rem 1.2rem;
+            margin-top: 1rem;
+            text-align: center;
+            border: 2px dashed #10b981;
+        }
+
+        .total-savings-badge .savings-icon {
+            font-size: 1.5rem;
+            margin-bottom: 0.3rem;
+        }
+
+        .total-savings-badge .savings-text {
+            color: #065f46;
+            font-weight: 700;
+            font-size: 1.1rem;
+        }
+
+        .total-savings-badge .savings-subtitle {
+            color: #047857;
+            font-size: 0.85rem;
+            margin-top: 0.2rem;
         }
 
         .btn {
@@ -399,16 +485,6 @@
         .btn:hover {
             transform: translateY(-3px);
             box-shadow: 0 10px 30px rgba(102, 126, 234, 0.5);
-        }
-
-        .discount-info {
-            background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
-            padding: 1rem;
-            border-radius: 12px;
-            margin-top: 1rem;
-            font-size: 0.9rem;
-            color: #065f46;
-            font-weight: 600;
         }
 
         .secure-badge {
@@ -548,7 +624,7 @@
                 
                 <div class="order-items-summary">
                     {% for item in cart_items %}
-                    <div class="order-item-summary" style="display: flex; gap: 1rem; padding: 1rem 0; border-bottom: 1px solid #f3f4f6;">
+                    <div class="order-item-summary">
                         <div class="item-image-summary">
                             {% if item.book.cover_image %}
                                 <img src="{{ item.book.cover_image.url }}" alt="{{ item.book.title }}">
@@ -566,32 +642,16 @@
                 </div>
                 
                 <div class="summary-row">
-                    <span>Subtotal ({{ cart.total_items }} items)</span>
+                    {% if cart.total_items == 1 %}
+                        <span>Subtotal ({{ cart.total_items }} item)</span>
+                    {% else %}
+                        <span>Subtotal ({{ cart.total_items }} items)</span>
+                    {% endif %}
                     <span class="amount">Rs. {{ cart.subtotal|floatformat:2 }}</span>
                 </div>
 
-                {% if cart.coupon_discount > 0 %}
-                <div class="summary-row discount">
-                    <span>🎟️ Coupon Discount</span>
-                    <span>-Rs. {{ cart.coupon_discount|floatformat:2 }}</span>
-                </div>
-                {% endif %}
-
-                {% if cart.order_value_discount > 0 %}
-                <div class="summary-row discount">
-                    <span>📦 Order Value Discount</span>
-                    <span>-Rs. {{ cart.order_value_discount|floatformat:2 }}</span>
-                </div>
-                {% endif %}
-
-                {% if cart.first_time_discount > 0 %}
-                <div class="summary-row discount">
-                    <span>⭐ First-Time Buyer Discount</span>
-                    <span>-Rs. {{ cart.first_time_discount|floatformat:2 }}</span>
-                </div>
-                {% endif %}
-                
-                <div class="summary-row">
+                <!-- Shipping -->
+                <div class="summary-row shipping">
                     <span>Shipping Fee</span>
                     {% if cart.shipping_fee == 0 %}
                         <span class="amount" style="color: #10b981; font-weight: 600;">FREE ✓</span>
@@ -599,20 +659,64 @@
                         <span class="amount">Rs. {{ cart.shipping_fee|floatformat:2 }}</span>
                     {% endif %}
                 </div>
+
+                <!-- Beautiful Discounts Section -->
+                {% if cart.coupon_discount > 0 or cart.order_value_discount > 0 or cart.first_time_discount > 0 %}
+                <div class="discounts-section">
+                    <div class="discounts-header">
+                        <span>🎉</span>
+                        <span>Applied Discounts</span>
+                    </div>
+
+                    {% if cart.coupon_discount > 0 %}
+                    <div class="discount-item">
+                        <span class="discount-label">
+                            <span>🎟️</span>
+                            <span>Coupon Discount</span>
+                        </span>
+                        <span class="discount-amount">-Rs. {{ cart.coupon_discount|floatformat:2 }}</span>
+                    </div>
+                    {% endif %}
+
+                    {% if cart.order_value_discount > 0 %}
+                    <div class="discount-item">
+                        <span class="discount-label">
+                            <span>📦</span>
+                            <span>Order Value Discount</span>
+                        </span>
+                        <span class="discount-amount">-Rs. {{ cart.order_value_discount|floatformat:2 }}</span>
+                    </div>
+                    {% endif %}
+
+                    {% if cart.first_time_discount > 0 %}
+                    <div class="discount-item">
+                        <span class="discount-label">
+                            <span>⭐</span>
+                            <span>First-Time Buyer</span>
+                        </span>
+                        <span class="discount-amount">-Rs. {{ cart.first_time_discount|floatformat:2 }}</span>
+                    </div>
+                    {% endif %}
+                </div>
+                {% endif %}
                 
+                <!-- Total -->
                 <div class="summary-row total">
                     <span>Total Amount</span>
                     <span class="amount">Rs. {{ cart.total_amount|floatformat:2 }}</span>
                 </div>
 
+                <!-- Total Savings Badge -->
                 {% if cart.total_discount > 0 %}
-                <div class="discount-info">
-                    💰 You saved Rs. {{ cart.total_discount|floatformat:2 }} on this order!
+                <div class="total-savings-badge">
+                    <div class="savings-icon">💰</div>
+                    <div class="savings-text">You Saved Rs. {{ cart.total_discount|floatformat:2 }}</div>
+                    <div class="savings-subtitle">Great deal on this order!</div>
                 </div>
                 {% endif %}
 
                 <div class="secure-badge">
-                    🔐 Secure Checkout
+                    🔒 Secure Checkout
                 </div>
             </div>
         </div>
