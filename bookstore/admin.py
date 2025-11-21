@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.contrib.auth.models import User
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
-from .models import Customer, Book, Order, OrderItem, Payment, Cart, CartItem, Coupon, CouponUsage
+from .models import Customer, Book, Order, OrderItem, Payment, Cart, CartItem, Coupon, CouponUsage, ContactMessage
 
 # Inline Customer info with User
 class CustomerInline(admin.StackedInline):
@@ -205,3 +205,27 @@ class CartItemAdmin(admin.ModelAdmin):
     def subtotal_display(self, obj):
         return f"Rs. {obj.subtotal}"
     subtotal_display.short_description = 'Subtotal'
+
+
+@admin.register(ContactMessage)
+class ContactMessageAdmin(admin.ModelAdmin):
+    list_display = ('name', 'email', 'subject', 'status', 'created_at')
+    list_filter = ('status', 'subject', 'created_at')
+    search_fields = ('name', 'email', 'message')
+    list_editable = ('status',)
+    readonly_fields = ('name', 'email', 'phone', 'subject', 'message', 'created_at')
+    
+    fieldsets = (
+        ('Contact Information', {
+            'fields': ('name', 'email', 'phone')
+        }),
+        ('Message Details', {
+            'fields': ('subject', 'message', 'created_at')
+        }),
+        ('Status', {
+            'fields': ('status',)
+        }),
+    )
+    
+    def has_add_permission(self, request):
+        return False 

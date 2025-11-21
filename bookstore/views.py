@@ -3,7 +3,7 @@ from django.contrib.auth import login, logout, authenticate
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.contrib import messages
-from .models import Book, Order, OrderItem, Customer, Payment, Cart, CartItem, Coupon, CouponUsage
+from .models import Book, Order, OrderItem, Customer, Payment, Cart, CartItem, Coupon, CouponUsage, ContactMessage
 from decimal import Decimal
 import json
 from django.http import JsonResponse
@@ -116,9 +116,18 @@ def contact(request):
     if request.method == 'POST':
         name = request.POST.get('name')
         email = request.POST.get('email')
-        phone = request.POST.get('phone')
+        phone = request.POST.get('phone', '').strip() or None
         subject = request.POST.get('subject')
         message = request.POST.get('message')
+        
+        # Save to database
+        ContactMessage.objects.create(
+            name=name,
+            email=email,
+            phone=phone,
+            subject=subject,
+            message=message
+        )
         
         messages.success(request, 'Thank you! Your message has been sent.')
         return redirect('contact')

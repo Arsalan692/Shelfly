@@ -293,6 +293,37 @@ class CartItem(models.Model):
         """Calculate subtotal for this item"""
         return self.book.price * self.quantity
 
+class ContactMessage(models.Model):
+    SUBJECT_CHOICES = [
+        ('order', 'Order Inquiry'),
+        ('book', 'Book Recommendation'),
+        ('delivery', 'Delivery Issue'),
+        ('feedback', 'Feedback'),
+        ('partnership', 'Partnership'),
+        ('other', 'Other'),
+    ]
+    
+    STATUS_CHOICES = [
+        ('unread', 'Unread'),
+        ('read', 'Read'),
+        ('resolved', 'Resolved'),
+    ]
+    
+    name = models.CharField(max_length=100)
+    email = models.EmailField()
+    phone = models.CharField(max_length=15, blank=True, null=True)
+    subject = models.CharField(max_length=50, choices=SUBJECT_CHOICES)
+    message = models.TextField()
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='unread')
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        ordering = ['-created_at']
+    
+    def __str__(self):
+        return f"{self.name} - {self.get_subject_display()} ({self.created_at.strftime('%Y-%m-%d')})"
+
+
 
 @receiver(post_save, sender=Payment)
 def update_order_status(sender, instance, created, **kwargs):
