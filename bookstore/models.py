@@ -5,6 +5,7 @@ from django.dispatch import receiver
 from django.core.exceptions import ValidationError
 from decimal import Decimal
 from datetime import datetime
+from django.utils import timezone
 
 class Customer(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
@@ -121,6 +122,42 @@ class Order(models.Model):
     cancellation_reason = models.TextField(blank=True, null=True)
     cancelled_at = models.DateTimeField(blank=True, null=True)
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Store the original status to detect changes
+        self._original_status = self.status if self.pk else None
+
+    def save(self, *args, **kwargs):
+        
+        
+        # Check if order is being cancelled (status changed to Cancelled)
+        if self.pk and self._original_status and self._original_status != 'Cancelled' and self.status == 'Cancelled':
+            # Restore stock for all items in the order
+            for order_item in self.orderitem_set.all():
+                order_item.book.stock += order_item.quantity
+                order_item.book.save()
+            
+            # Revert coupon usage if coupon was applied
+            if self.applied_coupon:
+                self.applied_coupon.current_usage -= 1
+                self.applied_coupon.save()
+                
+                # Delete coupon usage record
+                CouponUsage.objects.filter(order=self).delete()
+            
+            # Set cancellation timestamp if not already set
+            if not self.cancelled_at:
+                self.cancelled_at = timezone.now()
+            
+            # If no cancellation reason provided, set a default one
+            if not self.cancellation_reason:
+                self.cancellation_reason = "Cancelled by admin"
+        
+        # Save the order
+        super().save(*args, **kwargs)
+        
+        # Update the original status after save
+        self._original_status = self.status
 
     def __str__(self):
         return f"Order #{self.id} - {self.customer.user.username}"
@@ -142,7 +179,6 @@ class Order(models.Model):
 
     class Meta:
         ordering = ['-order_date']
-
 
 class OrderItem(models.Model):
     order = models.ForeignKey(Order, on_delete=models.CASCADE)
