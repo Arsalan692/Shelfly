@@ -482,9 +482,14 @@
             margin-top: 1.5rem;
         }
 
-        .btn:hover {
+        .btn:hover:not(:disabled) {
             transform: translateY(-3px);
             box-shadow: 0 10px 30px rgba(102, 126, 234, 0.5);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
         }
 
         .secure-badge {
@@ -613,7 +618,7 @@
                         </div>
                     </div>
 
-                    <button type="submit" class="btn">
+                    <button type="submit" class="btn" id="submitBtn">
                         🔒 Complete Order
                     </button>
                 </form>
@@ -737,6 +742,24 @@
                 document.getElementById('delivery_phone').value = "";
                 document.getElementById('delivery_address').value = "";
                 document.getElementById('delivery_name').focus();
+            }
+        });
+
+        // Handle form submission based on payment method
+        document.getElementById('checkoutForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const paymentMethod = document.querySelector('input[name="payment_method"]:checked').value;
+
+            // Store delivery details in session via hidden form submission
+            const formData = new FormData(this);
+
+            if (paymentMethod === 'Card') {
+                // Submit form to checkout, which will redirect to card payment form
+                this.submit();
+            } else {
+                // For Cash, submit directly
+                this.submit();
             }
         });
     </script>

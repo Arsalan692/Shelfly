@@ -30,4 +30,10 @@ urlpatterns = [
     path('checkout/', views.checkout, name='checkout'),
     path('orders/', views.order_history, name='order_history'),
     path('orders/<int:order_id>/cancel/', views.cancel_order, name='cancel_order'),
+
+    # Card Payment Routes
+    path('payment/card-form/', views.card_payment_form, name='card_payment_form'),
+    path('payment/process-card/', views.process_card_payment, name='process_card_payment'),
+    path('orders/<int:order_id>/payment-success/', views.payment_success, name='payment_success'),
+    path('payment/failed/', views.payment_failed, name='payment_failed'),
 ]
