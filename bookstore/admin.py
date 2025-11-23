@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.contrib.auth.models import User
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
-from .models import Customer, Book, Order, OrderItem, Payment, Cart, CartItem, Coupon, CouponUsage, ContactMessage
+from .models import Customer, Book, Order, OrderItem, Payment, Cart, CartItem, Coupon, CouponUsage, ContactMessage, Delivery, OrderCancellation
 
 # Inline Customer info with User
 class CustomerInline(admin.StackedInline):
@@ -52,13 +52,18 @@ class BookAdmin(admin.ModelAdmin):
 
 @admin.register(Coupon)
 class CouponAdmin(admin.ModelAdmin):
-    list_display = ('code', 'discount_type', 'discount_value', 'current_usage', 'max_usage', 'min_purchase', 'expiry_date', 'is_active', 'usage_percentage')
+    list_display = ('code', 'discount_type', 'discount_value', 'current_usage_display', 'max_usage', 'min_purchase', 'expiry_date', 'is_active', 'usage_percentage')
     search_fields = ('code',)
     list_filter = ('discount_type', 'is_active', 'expiry_date')
     list_editable = ('is_active',)
     
-    fields = ('code', 'discount_type', 'discount_value', 'max_usage', 'current_usage', 'min_purchase', 'expiry_date', 'is_active', 'created_at')
-    readonly_fields = ('current_usage', 'created_at')
+    fields = ('code', 'discount_type', 'discount_value', 'max_usage', 'min_purchase', 'expiry_date', 'is_active', 'created_at', 'current_usage_display')
+    readonly_fields = ('current_usage_display', 'created_at')
+    
+    def current_usage_display(self, obj):
+        """Display current usage calculated from CouponUsage records"""
+        return obj.current_usage
+    current_usage_display.short_description = 'Current Usage'
     
     def usage_percentage(self, obj):
         if obj.max_usage > 0:
@@ -90,33 +95,42 @@ class OrderItemInline(admin.TabularInline):
     can_delete = True
 
 
+class DeliveryInline(admin.StackedInline):
+    """BCNF: Inline for Delivery information"""
+    model = Delivery
+    extra = 0
+    fields = ('recipient_name', 'phone', 'address', 'notes', 'created_at')
+    readonly_fields = ('created_at',)
+
+
+class OrderCancellationInline(admin.StackedInline):
+    """BCNF: Inline for Cancellation information"""
+    model = OrderCancellation
+    extra = 0
+    fields = ('reason', 'cancelled_at')
+    readonly_fields = ('cancelled_at',)
+
+
 @admin.register(Order)
 class OrderAdmin(admin.ModelAdmin):
     list_display = ('id', 'customer', 'order_date', 'status', 'subtotal_display', 'total_discount_display', 'shipping_fee', 'total_amount')
     list_filter = ('status', 'order_date')
-    search_fields = ('customer__user__username', 'delivery_name', 'delivery_phone')
+    search_fields = ('customer__user__username', 'delivery__recipient_name', 'delivery__phone')
     
     list_editable = ('status',)
     
-    inlines = [OrderItemInline]
+    inlines = [OrderItemInline, DeliveryInline, OrderCancellationInline]
     
     fieldsets = (
         ('Order Information', {
             'fields': ('customer', 'status', 'order_date')
         }),
-        ('Delivery Details', {
-            'fields': ('delivery_name', 'delivery_phone', 'delivery_address', 'delivery_notes')
-        }),
         ('Pricing & Discounts', {
-            'fields': ('shipping_fee', 'applied_coupon', 'discount_code_used', 'coupon_discount', 'order_value_discount', 'first_time_discount')
-        }),
-        ('Cancellation Details', {
-            'fields': ('cancellation_reason', 'cancelled_at'),
-            'classes': ('collapse',),  # Makes this section collapsible
+            'fields': ('shipping_fee', 'applied_coupon')
         }),
     )
     
-    readonly_fields = ('order_date', 'coupon_discount', 'order_value_discount', 'first_time_discount', 'cancellation_reason', 'cancelled_at')
+    readonly_fields = ('order_date',)
     
     def subtotal_display(self, obj):
         return f"Rs. {obj.subtotal}"
@@ -135,6 +149,28 @@ class OrderItemAdmin(admin.ModelAdmin):
     
     fields = ('order', 'book', 'quantity', 'unit_price', 'subtotal')
     readonly_fields = ('unit_price', 'subtotal')
+
+
+@admin.register(Delivery)
+class DeliveryAdmin(admin.ModelAdmin):
+    """BCNF: Admin for Delivery entity"""
+    list_display = ('order', 'recipient_name', 'phone', 'address', 'created_at')
+    search_fields = ('order__id', 'recipient_name', 'phone')
+    list_filter = ('created_at',)
+    
+    fields = ('order', 'recipient_name', 'phone', 'address', 'notes', 'created_at')
+    readonly_fields = ('order', 'created_at')
+
+
+@admin.register(OrderCancellation)
+class OrderCancellationAdmin(admin.ModelAdmin):
+    """BCNF: Admin for OrderCancellation entity"""
+    list_display = ('order', 'cancelled_at')
+    search_fields = ('order__id',)
+    list_filter = ('cancelled_at',)
+    
+    fields = ('order', 'reason', 'cancelled_at')
+    readonly_fields = ('order', 'cancelled_at')
 
 
 @admin.register(Payment)
@@ -232,4 +268,4 @@ class ContactMessageAdmin(admin.ModelAdmin):
     )
     
     def has_add_permission(self, request):
-        return False 
+        return False

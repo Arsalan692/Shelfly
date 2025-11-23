@@ -561,11 +561,12 @@
                         <div class="error-message" id="cvvError"></div>
                     </div>
 
+                   
                     <!-- Hidden Delivery Fields - Pre-filled from context -->
                     <input type="hidden" id="delivery_name" name="delivery_name" value="{{ delivery_name|default:customer.user.get_full_name|default:customer.user.username }}">
                     <input type="hidden" id="delivery_phone" name="delivery_phone" value="{{ delivery_phone|default:customer.phone }}">
                     <input type="hidden" id="delivery_address" name="delivery_address" value="{{ delivery_address|default:customer.address }}">
-                    <input type="hidden" id="delivery_notes" name="delivery_notes" value="{{ delivery_notes|default:'' }}"
+                    <input type="hidden" id="delivery_notes" name="delivery_notes" value="{{ delivery_notes|default:'' }}">
 
                     <!-- Delivery Info Display -->
                     <div class="delivery-info">

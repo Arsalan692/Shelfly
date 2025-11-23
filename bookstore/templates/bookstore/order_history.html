@@ -556,27 +556,30 @@
                     </div>
 
                     <div class="order-content">
+                        <!-- BCNF: Get delivery info from Delivery model -->
+                        {% if order.delivery %}
                         <div class="delivery-info">
-                            <h4>📍 Delivery Information</h4>
+                            <h4>🏠 Delivery Information</h4>
                             <div class="info-row">
                                 <span class="info-label">Name:</span>
-                                <span class="info-value">{{ order.delivery_name }}</span>
+                                <span class="info-value">{{ order.delivery.recipient_name }}</span>
                             </div>
                             <div class="info-row">
                                 <span class="info-label">Phone:</span>
-                                <span class="info-value">{{ order.delivery_phone }}</span>
+                                <span class="info-value">{{ order.delivery.phone }}</span>
                             </div>
                             <div class="info-row">
                                 <span class="info-label">Address:</span>
-                                <span class="info-value">{{ order.delivery_address }}</span>
+                                <span class="info-value">{{ order.delivery.address }}</span>
                             </div>
-                            {% if order.delivery_notes %}
+                            {% if order.delivery.notes %}
                             <div class="info-row">
                                 <span class="info-label">Notes:</span>
-                                <span class="info-value">{{ order.delivery_notes }}</span>
+                                <span class="info-value">{{ order.delivery.notes }}</span>
                             </div>
                             {% endif %}
                         </div>
+                        {% endif %}
 
                         <div class="pricing-summary">
                             <h4>💰 Pricing Details</h4>
@@ -606,7 +609,7 @@
                                 <div class="discount-item">
                                     <span class="discount-label">
                                         <span>🎟️</span>
-                                        <span>Coupon ({{ order.discount_code_used }})</span>
+                                        <span>Coupon{% if order.applied_coupon %} ({{ order.applied_coupon.code }}){% endif %}</span>
                                     </span>
                                     <span class="discount-amount">-Rs. {{ order.coupon_discount|floatformat:2 }}</span>
                                 </div>

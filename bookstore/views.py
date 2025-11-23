@@ -3,7 +3,7 @@ from django.contrib.auth import login, logout, authenticate, update_session_auth
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.contrib import messages
-from .models import Book, Order, OrderItem, Customer, Payment, Cart, CartItem, Coupon, CouponUsage, ContactMessage
+from .models import Book, Order, OrderItem, Customer, Payment, Cart, CartItem, Coupon, CouponUsage, ContactMessage, Delivery, OrderCancellation
 from decimal import Decimal
 import json
 from django.http import JsonResponse
@@ -319,6 +319,7 @@ def cancel_order(request, order_id):
     """
     Cancel an order if it's in a cancellable state (Pending or Confirmed)
     and restore stock for all items
+    BCNF: Updated to use OrderCancellation model
     """
     order = get_object_or_404(Order, id=order_id, customer=request.user.customer)
     
@@ -338,17 +339,18 @@ def cancel_order(request, order_id):
         
         # Revert coupon usage if coupon was applied
         if order.applied_coupon:
-            order.applied_coupon.current_usage -= 1
-            order.applied_coupon.save()
-            
             # Delete coupon usage record
             CouponUsage.objects.filter(order=order).delete()
         
-        # Update order status and save cancellation details
+        # Update order status
         order.status = 'Cancelled'
-        order.cancellation_reason = cancellation_reason if cancellation_reason else None
-        order.cancelled_at = timezone.now()
         order.save()
+        
+        # Create OrderCancellation record (BCNF)
+        OrderCancellation.objects.create(
+            order=order,
+            reason=cancellation_reason if cancellation_reason else None
+        )
         
         messages.success(
             request, 
@@ -524,7 +526,7 @@ def card_payment_form(request):
 @customer_required
 @require_http_methods(["POST"])
 def process_card_payment(request):
-    """Process card payment and create order"""
+    """Process card payment and create order with BCNF structure"""
     customer = request.user.customer
     cart = get_object_or_404(Cart, customer=customer)
     cart_items = cart.cartitem_set.all()
@@ -539,7 +541,7 @@ def process_card_payment(request):
     expiry_year = request.POST.get('expiry_year', '').strip()
     cvv = request.POST.get('cvv', '').strip()
     
-    # Get delivery details from session/post
+    # Get delivery details from POST
     delivery_name = request.POST.get('delivery_name', '').strip()
     delivery_phone = request.POST.get('delivery_phone', '').strip()
     delivery_address = request.POST.get('delivery_address', '').strip()
@@ -576,19 +578,29 @@ def process_card_payment(request):
         })
     
     try:
+        # Calculate discount amounts BEFORE creating order
+        coupon_discount_amt = cart.coupon_discount
+        order_value_discount_amt = cart.order_value_discount
+        first_time_discount_amt = cart.first_time_discount
+        
         # All validations passed - Create Order
         order = Order.objects.create(
             customer=customer,
-            delivery_name=delivery_name,
-            delivery_phone=delivery_phone,
-            delivery_address=delivery_address,
-            delivery_notes=delivery_notes,
             shipping_fee=cart.shipping_fee,
             applied_coupon=cart.applied_coupon,
-            coupon_discount=cart.coupon_discount,
-            order_value_discount=cart.order_value_discount,
-            first_time_discount=cart.first_time_discount,
-            discount_code_used=cart.applied_coupon.code if cart.applied_coupon else None
+            # Store the calculated discount amounts
+            coupon_discount_amount=coupon_discount_amt,
+            order_value_discount_amount=order_value_discount_amt,
+            first_time_discount_amount=first_time_discount_amt,
+        )
+        
+        # BCNF: Create Delivery record separately
+        Delivery.objects.create(
+            order=order,
+            recipient_name=delivery_name,
+            phone=delivery_phone,
+            address=delivery_address,
+            notes=delivery_notes,
         )
         
         # Create Order Items
@@ -603,11 +615,7 @@ def process_card_payment(request):
         
         # Update Coupon Usage
         if cart.applied_coupon:
-            from .models import CouponUsage
             coupon = cart.applied_coupon
-            coupon.current_usage += 1
-            coupon.save()
-            
             CouponUsage.objects.create(
                 coupon=coupon,
                 customer=customer,
@@ -714,21 +722,31 @@ def checkout(request):
         request.session['delivery_address'] = delivery_address
         request.session['delivery_notes'] = delivery_notes
         
-        # If Cash payment, create order directly
+        # If Cash payment, create order directly with BCNF structure
         if payment_method == 'Cash':
             try:
+                # Calculate discount amounts BEFORE creating order
+                coupon_discount_amt = cart.coupon_discount
+                order_value_discount_amt = cart.order_value_discount
+                first_time_discount_amt = cart.first_time_discount
+                
                 order = Order.objects.create(
                     customer=customer,
-                    delivery_name=delivery_name,
-                    delivery_phone=delivery_phone,
-                    delivery_address=delivery_address,
-                    delivery_notes=delivery_notes,
                     shipping_fee=cart.shipping_fee,
                     applied_coupon=cart.applied_coupon,
-                    coupon_discount=cart.coupon_discount,
-                    order_value_discount=cart.order_value_discount,
-                    first_time_discount=cart.first_time_discount,
-                    discount_code_used=cart.applied_coupon.code if cart.applied_coupon else None
+                    # Store the calculated discount amounts
+                    coupon_discount_amount=coupon_discount_amt,
+                    order_value_discount_amount=order_value_discount_amt,
+                    first_time_discount_amount=first_time_discount_amt,
+                )
+                
+                # BCNF: Create Delivery record separately
+                Delivery.objects.create(
+                    order=order,
+                    recipient_name=delivery_name,
+                    phone=delivery_phone,
+                    address=delivery_address,
+                    notes=delivery_notes if delivery_notes else None,
                 )
                 
                 # Create Order Items
@@ -743,11 +761,7 @@ def checkout(request):
                 
                 # Update Coupon Usage
                 if cart.applied_coupon:
-                    from .models import CouponUsage
                     coupon = cart.applied_coupon
-                    coupon.current_usage += 1
-                    coupon.save()
-                    
                     CouponUsage.objects.create(
                         coupon=coupon,
                         customer=customer,
@@ -781,7 +795,6 @@ def checkout(request):
         
         # If Card payment, redirect to card payment form with POST data
         elif payment_method == 'Card':
-            # Instead of just redirecting, we'll render the card form directly with data
             return card_payment_form(request)
         
         else:

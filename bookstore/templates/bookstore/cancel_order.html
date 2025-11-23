@@ -428,6 +428,24 @@
                     <span class="item-value">#{{ order.id }}</span>
                 </div>
 
+                <!-- BCNF: Get delivery info from Delivery model -->
+                {% if order.delivery %}
+                <div class="summary-item">
+                    <span class="item-label">Recipient Name</span>
+                    <span class="item-value">{{ order.delivery.recipient_name }}</span>
+                </div>
+
+                <div class="summary-item">
+                    <span class="item-label">Phone</span>
+                    <span class="item-value">{{ order.delivery.phone }}</span>
+                </div>
+
+                <div class="summary-item">
+                    <span class="item-label">Address</span>
+                    <span class="item-value">{{ order.delivery.address }}</span>
+                </div>
+                {% endif %}
+
                 <div class="summary-item">
                     <span class="item-label">Order Date</span>
                     <span class="item-value">{{ order.order_date|date:"M d, Y" }}</span>

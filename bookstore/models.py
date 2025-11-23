@@ -6,6 +6,7 @@ from django.core.exceptions import ValidationError
 from decimal import Decimal
 from datetime import datetime
 from django.utils import timezone
+from django.db.models import Count
 
 class Customer(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
@@ -49,7 +50,6 @@ class Coupon(models.Model):
     discount_type = models.CharField(max_length=20, choices=DISCOUNT_TYPE_CHOICES)
     discount_value = models.DecimalField(max_digits=8, decimal_places=2)
     max_usage = models.PositiveIntegerField(default=100)
-    current_usage = models.PositiveIntegerField(default=0)
     min_purchase = models.DecimalField(max_digits=8, decimal_places=2, default=0.00)
     expiry_date = models.DateTimeField()
     is_active = models.BooleanField(default=True)
@@ -57,6 +57,11 @@ class Coupon(models.Model):
 
     def __str__(self):
         return f"{self.code} - {self.get_discount_type_display()}"
+    
+    @property
+    def current_usage(self):
+        """Calculate current usage from CouponUsage records"""
+        return self.couponusage_set.count()
     
     def is_valid(self):
         """Check if coupon is valid and can be used"""
@@ -104,23 +109,13 @@ class Order(models.Model):
     customer = models.ForeignKey(Customer, on_delete=models.CASCADE)
     order_date = models.DateTimeField(auto_now_add=True)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='Pending')
-    
-    # Delivery Information
-    delivery_name = models.CharField(max_length=100, default='N/A')
-    delivery_phone = models.CharField(max_length=15, default='N/A')
-    delivery_address = models.TextField(default='N/A')
-    delivery_notes = models.TextField(blank=True, null=True)
-    
-    # Shipping and Discount
     shipping_fee = models.DecimalField(max_digits=8, decimal_places=2, default=0.00)
     applied_coupon = models.ForeignKey(Coupon, on_delete=models.SET_NULL, null=True, blank=True)
-    coupon_discount = models.DecimalField(max_digits=8, decimal_places=2, default=0.00)
-    order_value_discount = models.DecimalField(max_digits=8, decimal_places=2, default=0.00)
-    first_time_discount = models.DecimalField(max_digits=8, decimal_places=2, default=0.00)
-    discount_code_used = models.CharField(max_length=50, blank=True, null=True)
-
-    cancellation_reason = models.TextField(blank=True, null=True)
-    cancelled_at = models.DateTimeField(blank=True, null=True)
+    
+    # NEW: Store calculated discount values at order time
+    coupon_discount_amount = models.DecimalField(max_digits=8, decimal_places=2, default=0.00)
+    order_value_discount_amount = models.DecimalField(max_digits=8, decimal_places=2, default=0.00)
+    first_time_discount_amount = models.DecimalField(max_digits=8, decimal_places=2, default=0.00)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -128,8 +123,6 @@ class Order(models.Model):
         self._original_status = self.status if self.pk else None
 
     def save(self, *args, **kwargs):
-        
-        
         # Check if order is being cancelled (status changed to Cancelled)
         if self.pk and self._original_status and self._original_status != 'Cancelled' and self.status == 'Cancelled':
             # Restore stock for all items in the order
@@ -139,19 +132,8 @@ class Order(models.Model):
             
             # Revert coupon usage if coupon was applied
             if self.applied_coupon:
-                self.applied_coupon.current_usage -= 1
-                self.applied_coupon.save()
-                
                 # Delete coupon usage record
                 CouponUsage.objects.filter(order=self).delete()
-            
-            # Set cancellation timestamp if not already set
-            if not self.cancelled_at:
-                self.cancelled_at = timezone.now()
-            
-            # If no cancellation reason provided, set a default one
-            if not self.cancellation_reason:
-                self.cancellation_reason = "Cancelled by admin"
         
         # Save the order
         super().save(*args, **kwargs)
@@ -168,6 +150,49 @@ class Order(models.Model):
         return sum(item.subtotal for item in self.orderitem_set.all())
     
     @property
+    def coupon_discount(self):
+        """Return stored coupon discount or calculate for new orders"""
+        if self.pk:
+            # For existing orders, return the stored value
+            return self.coupon_discount_amount
+        
+        # For new orders (in cart/checkout), calculate dynamically
+        if self.applied_coupon:
+            is_valid, msg = self.applied_coupon.is_valid()
+            if is_valid and self.subtotal >= self.applied_coupon.min_purchase:
+                return self.applied_coupon.calculate_discount(self.subtotal)
+        return Decimal('0.00')
+    
+    @property
+    def order_value_discount(self):
+        """Return stored order value discount or calculate for new orders"""
+        if self.pk:
+            # For existing orders, return the stored value
+            return self.order_value_discount_amount
+        
+        # For new orders, calculate dynamically
+        subtotal = self.subtotal
+        if subtotal >= 5000:
+            return subtotal * Decimal('0.15')
+        elif subtotal >= 2000:
+            return subtotal * Decimal('0.10')
+        elif subtotal >= 1000:
+            return subtotal * Decimal('0.05')
+        return Decimal('0.00')
+    
+    @property
+    def first_time_discount(self):
+        """Return stored first-time discount or calculate for new orders"""
+        if self.pk:
+            # For existing orders, return the stored value
+            return self.first_time_discount_amount
+        
+        # For new orders, calculate dynamically
+        if self.customer.is_first_time_buyer:
+            return self.subtotal * Decimal('0.15')
+        return Decimal('0.00')
+    
+    @property
     def total_discount(self):
         """Calculate total discount applied"""
         return self.coupon_discount + self.order_value_discount + self.first_time_discount
@@ -179,6 +204,30 @@ class Order(models.Model):
 
     class Meta:
         ordering = ['-order_date']
+
+
+class Delivery(models.Model):
+    """BCNF: Separate entity for delivery information"""
+    order = models.OneToOneField(Order, on_delete=models.CASCADE, related_name='delivery')
+    recipient_name = models.CharField(max_length=100)
+    phone = models.CharField(max_length=15)
+    address = models.TextField()
+    notes = models.TextField(blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Delivery for Order #{self.order.id}"
+
+
+class OrderCancellation(models.Model):
+    """BCNF: Separate entity for cancellation information"""
+    order = models.OneToOneField(Order, on_delete=models.CASCADE, related_name='cancellation')
+    reason = models.TextField(blank=True, null=True)
+    cancelled_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Cancellation for Order #{self.order.id}"
+
 
 class OrderItem(models.Model):
     order = models.ForeignKey(Order, on_delete=models.CASCADE)
@@ -333,6 +382,7 @@ class CartItem(models.Model):
         """Calculate subtotal for this item"""
         return self.book.price * self.quantity
 
+
 class ContactMessage(models.Model):
     SUBJECT_CHOICES = [
         ('order', 'Order Inquiry'),
@@ -362,7 +412,6 @@ class ContactMessage(models.Model):
     
     def __str__(self):
         return f"{self.name} - {self.get_subject_display()} ({self.created_at.strftime('%Y-%m-%d')})"
-
 
 
 @receiver(post_save, sender=Payment)

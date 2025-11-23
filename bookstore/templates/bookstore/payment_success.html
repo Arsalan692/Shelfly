@@ -435,21 +435,23 @@
                         </div>
                     </div>
 
-                    <!-- Delivery Information -->
+                    <!-- Delivery Information - BCNF: Get from Delivery model -->
+                    {% if order.delivery %}
                     <div class="detail-card">
                         <div class="detail-title">📍 Delivery Address</div>
                         <div class="detail-info">
-                            <strong>{{ order.delivery_name }}</strong><br>
-                            📞 {{ order.delivery_phone }}<br><br>
+                            <strong>{{ order.delivery.recipient_name }}</strong><br>
+                            📞 {{ order.delivery.phone }}<br><br>
                             <strong>Address:</strong><br>
-                            {{ order.delivery_address }}<br>
-                            {% if order.delivery_notes %}
+                            {{ order.delivery.address }}<br>
+                            {% if order.delivery.notes %}
                             <br>
                             <strong>Notes:</strong><br>
-                            {{ order.delivery_notes }}
+                            {{ order.delivery.notes }}
                             {% endif %}
                         </div>
                     </div>
+                    {% endif %}
                 </div>
 
                 <!-- Order Items -->
