@@ -435,7 +435,6 @@
                         </div>
                     </div>
 
-                    <!-- Delivery Information - BCNF: Get from Delivery model -->
                     {% if order.delivery %}
                     <div class="detail-card">
                         <div class="detail-title">📍 Delivery Address</div>
@@ -454,7 +453,6 @@
                     {% endif %}
                 </div>
 
-                <!-- Order Items -->
                 <div class="order-items-section">
                     <h2 class="section-title">📦 Order Items</h2>
                     <div class="order-items">
@@ -478,7 +476,6 @@
                     </div>
                 </div>
 
-                <!-- Order Summary -->
                 <div class="summary-section">
                     <div class="summary-row">
                         <span>Subtotal:</span>
@@ -500,13 +497,11 @@
                     </div>
                 </div>
 
-                <!-- Tracking Info -->
                 <div class="tracking-info">
                     <strong>📦 Track Your Order</strong>
                     You can track your order status in real-time from your account. We'll notify you when your order is shipped and delivered.
                 </div>
 
-                <!-- Action Buttons -->
                 <div class="action-buttons">
                     <a href="{% url 'order_history' %}" class="btn btn-primary">
                         📋 View All Orders

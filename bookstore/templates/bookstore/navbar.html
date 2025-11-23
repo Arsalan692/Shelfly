@@ -196,9 +196,7 @@
         border-color: rgba(239, 68, 68, 0.7);
     }
 
-    /* ============================================ */
-    /* FIXED MESSAGE ALERTS - SHOWS ON EVERY PAGE */
-    /* ============================================ */
+ 
     .messages-container {
         position: fixed;
         top: 80px;
@@ -396,7 +394,6 @@
                     </div>
                 </div>
             {% else %}
-                <!-- Regular Customer Navigation -->
                 <a href="{% url 'view_cart' %}" class="cart-link">
                     🛒 Cart
                     {% if user.customer.cart.total_items > 0 %}
@@ -422,7 +419,6 @@
     </nav>
 </header>
 
-<!-- UNIVERSAL MESSAGE ALERTS - SHOWS ON EVERY PAGE -->
 {% if messages %}
 <div class="messages-container">
     {% for message in messages %}

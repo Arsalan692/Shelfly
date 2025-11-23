@@ -80,7 +80,7 @@ class Coupon(models.Model):
         """Calculate discount based on discount type"""
         if self.discount_type == 'fixed':
             return min(self.discount_value, amount)
-        else:  # percentage
+        else:  
             return (amount * self.discount_value) / 100
 
 
@@ -112,33 +112,25 @@ class Order(models.Model):
     shipping_fee = models.DecimalField(max_digits=8, decimal_places=2, default=0.00)
     applied_coupon = models.ForeignKey(Coupon, on_delete=models.SET_NULL, null=True, blank=True)
     
-    # NEW: Store calculated discount values at order time
     coupon_discount_amount = models.DecimalField(max_digits=8, decimal_places=2, default=0.00)
     order_value_discount_amount = models.DecimalField(max_digits=8, decimal_places=2, default=0.00)
     first_time_discount_amount = models.DecimalField(max_digits=8, decimal_places=2, default=0.00)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        # Store the original status to detect changes
         self._original_status = self.status if self.pk else None
 
     def save(self, *args, **kwargs):
-        # Check if order is being cancelled (status changed to Cancelled)
         if self.pk and self._original_status and self._original_status != 'Cancelled' and self.status == 'Cancelled':
-            # Restore stock for all items in the order
             for order_item in self.orderitem_set.all():
                 order_item.book.stock += order_item.quantity
                 order_item.book.save()
             
-            # Revert coupon usage if coupon was applied
             if self.applied_coupon:
-                # Delete coupon usage record
                 CouponUsage.objects.filter(order=self).delete()
         
-        # Save the order
         super().save(*args, **kwargs)
         
-        # Update the original status after save
         self._original_status = self.status
 
     def __str__(self):
@@ -153,10 +145,8 @@ class Order(models.Model):
     def coupon_discount(self):
         """Return stored coupon discount or calculate for new orders"""
         if self.pk:
-            # For existing orders, return the stored value
             return self.coupon_discount_amount
         
-        # For new orders (in cart/checkout), calculate dynamically
         if self.applied_coupon:
             is_valid, msg = self.applied_coupon.is_valid()
             if is_valid and self.subtotal >= self.applied_coupon.min_purchase:
@@ -167,10 +157,8 @@ class Order(models.Model):
     def order_value_discount(self):
         """Return stored order value discount or calculate for new orders"""
         if self.pk:
-            # For existing orders, return the stored value
             return self.order_value_discount_amount
         
-        # For new orders, calculate dynamically
         subtotal = self.subtotal
         if subtotal >= 5000:
             return subtotal * Decimal('0.15')
@@ -184,10 +172,8 @@ class Order(models.Model):
     def first_time_discount(self):
         """Return stored first-time discount or calculate for new orders"""
         if self.pk:
-            # For existing orders, return the stored value
             return self.first_time_discount_amount
         
-        # For new orders, calculate dynamically
         if self.customer.is_first_time_buyer:
             return self.subtotal * Decimal('0.15')
         return Decimal('0.00')
@@ -240,7 +226,6 @@ class OrderItem(models.Model):
         self.unit_price = self.book.price
         self.subtotal = self.unit_price * self.quantity
         
-        # Only reduce stock for new order items
         if not self.pk:
             if self.book.stock >= self.quantity:
                 self.book.stock -= self.quantity
@@ -350,14 +335,11 @@ class Cart(models.Model):
         subtotal = self.subtotal
         total_items = self.total_items
         
-        # Free shipping for orders above Rs. 5000
         if subtotal >= 5000:
             return Decimal('0.00')
         
-        # Base shipping fee
         base_fee = Decimal('50.00')
         
-        # Additional fee for more than 5 books
         if total_items > 5:
             additional_fee = (total_items - 5) * Decimal('10.00')
             return base_fee + additional_fee

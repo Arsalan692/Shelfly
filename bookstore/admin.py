@@ -3,19 +3,16 @@ from django.contrib.auth.models import User
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from .models import Customer, Book, Order, OrderItem, Payment, Cart, CartItem, Coupon, CouponUsage, ContactMessage, Delivery, OrderCancellation
 
-# Inline Customer info with User
 class CustomerInline(admin.StackedInline):
     model = Customer
     can_delete = False
     verbose_name_plural = 'Customer Profile'
 
 
-# Extend User Admin
 class UserAdmin(BaseUserAdmin):
     inlines = (CustomerInline,)
 
 
-# Re-register UserAdmin
 admin.site.unregister(User)
 admin.site.register(User, UserAdmin)
 
