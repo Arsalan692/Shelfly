@@ -314,12 +314,12 @@ def cancel_order(request, order_id):
     if request.method == 'POST':
         cancellation_reason = request.POST.get('cancellation_reason', '').strip()
         
-        for order_item in order.orderitem_set.all():
-            order_item.book.stock += order_item.quantity
-            order_item.book.save()
+        # for order_item in order.orderitem_set.all():
+        #     order_item.book.stock += order_item.quantity
+        #     order_item.book.save()
         
-        if order.applied_coupon:
-            CouponUsage.objects.filter(order=order).delete()
+        # if order.applied_coupon:
+        #     CouponUsage.objects.filter(order=order).delete()
         
         order.status = 'Cancelled'
         order.save()
